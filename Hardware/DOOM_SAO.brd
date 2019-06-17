@@ -5488,7 +5488,7 @@
 <library name="PP_Aesthetics">
 <packages>
 <package name="LHE_FRAME">
-<text x="0" y="5.08" size="0.8128" layer="21" font="vector" ratio="16">(c) 2018 Longhorn Engineer</text>
+<text x="0" y="5.08" size="0.8128" layer="21" font="vector" ratio="16">(c) 2019 Longhorn Engineer</text>
 <text x="0" y="3.81" size="0.8128" layer="21" font="vector" ratio="16">longhornengineer.com</text>
 <text x="0" y="2.54" size="0.8128" layer="21" font="vector" ratio="16">&gt;DRAWING_NAME</text>
 <text x="0" y="1.27" size="0.8128" layer="21" font="vector" ratio="16">&gt;REVNUM</text>
