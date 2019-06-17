@@ -21,11 +21,18 @@ int16_t mf_rez_x = 60;
 
 uint16_t time = 0;
 
+uint8_t mem_address = 0;
+
+uint8_t eeprom[4] = {
+  0x1B, 0x05, 0x01, 0x41
+};
+
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
 void setup(void)
 {
-  Wire.begin(4);                // join i2c bus with address #4
+  Wire.begin(0x50);                // join i2c bus with address #4
+  Wire.onRequest(requestEvent); 
   Wire.onReceive(receiveEvent);
   
   SerialUSB.begin(9600);
@@ -103,11 +110,28 @@ void render(const uint16_t dg_face[], int16_t siz, int16_t offset_x, int16_t off
 // this function is registered as an event, see setup()
 void receiveEvent(int howMany)
 {
+  SerialUSB.println("receiveEvent");
+  SerialUSB.print("How Many Bytes: ");
+  SerialUSB.println(howMany);
+
+  uint8_t receive_buffer[howMany] = { 0 };
+  
   while(1 < Wire.available()) // loop through all but the last
   {
+    SerialUSB.println("Wire Available");
     char c = Wire.read(); // receive byte as a character
-    SerialUSB.print(c);         // print the character
+    SerialUSB.println(byte(c));         // print the character
   }
   int x = Wire.read();    // receive byte as an integer
-  SerialUSB.println(x);         // print the integer
+  mem_address = x;
+  SerialUSB.println(byte(x));         // print the integer
+}
+
+void requestEvent()
+{
+    SerialUSB.println("requestEvent");
+    //char c = Wire.read();
+    //SerialUSB.println(byte(c));
+    Wire.write(eeprom[mem_address]);
+    return;
 }
