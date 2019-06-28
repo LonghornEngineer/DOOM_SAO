@@ -5,7 +5,6 @@
 PCB was designed in AutoDesk Eagle V9.3+
 
 ## Hardware Specifications
-***
 *Arduino Compatible MCU ATSAMD21G18A
 *Full implementation of the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/)
 *High DPI ST7789 1.3" 240x240 LCD Screen
@@ -16,19 +15,16 @@ PCB was designed in AutoDesk Eagle V9.3+
 *Possibly the only 4 Layer SAO
 
 ## PCB Layers
-***
 1. Component mounting and signals
 2. Ground
 3. +3.3V
 4. GPIO Breakout signals
 
 ## Schematic
-***
 
 ![Schematic DOOM SAO](Schematic.png)
 
 ## Board Layout
-***
 
 ![Board Layout Top DOOM SAO](PCB_Layout_Top.png)
 
@@ -36,7 +32,6 @@ PCB was designed in AutoDesk Eagle V9.3+
 
 
 ## PCB Render
-***
 
 ![PCB Render DOOM SAO](DOOM_SAO_MF_RENDER.png)
 
