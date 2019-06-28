@@ -1,10 +1,10 @@
-###DOOM Shitty Add On Hardware
+### DOOM Shitty Add On Hardware
 ***
 **Add on for conference badges that features a LCD Screen and DOOM Guy.**
 
 PCB was designed in AutoDesk Eagle V9.3+
 
-##Hardware Specifications
+## Hardware Specifications
 ***
 *Arduino Compatible MCU ATSAMD21G18A
 *Full implementation of the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/)
@@ -15,19 +15,19 @@ PCB was designed in AutoDesk Eagle V9.3+
 *Unused GPIO from MCU broken out to headers
 *Possibly the only 4 Layer SAO
 
-##PCB Layers
+## PCB Layers
 ***
 1. Component mounting and signals
 2. Ground
 3. +3.3V
 4. GPIO Breakout signals
 
-##Schematic
+## Schematic
 ***
 
 ![Schematic DOOM SAO](Schematic.png)
 
-##Board Layout
+## Board Layout
 ***
 
 ![Board Layout Top DOOM SAO](PCB_Layout_Top.png)
@@ -35,7 +35,7 @@ PCB was designed in AutoDesk Eagle V9.3+
 ![Board Layout Bottom DOOM SAO](PCB_Layout_Bottom.png)
 
 
-##PCB Render
+## PCB Render
 ***
 
 ![PCB Render DOOM SAO](DOOM_SAO_MF_RENDER.png)
