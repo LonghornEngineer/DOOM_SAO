@@ -1,6 +1,5 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
-#include <SPI.h>
 #include <Wire.h>
 #include "DG_Faces.h"
 #include "MF_Logo.h"
@@ -19,25 +18,23 @@ int16_t mf_offset_y = 0;
 int16_t mf_pixel_size = 4;
 int16_t mf_rez_x = 60;
 
-uint16_t time = 0;
+uint8_t mem_write_address = 0x00;
 
-uint8_t mem_address = 0;
-
-uint8_t eeprom[4] = {
-  0x1B, 0x05, 0x01, 0x41
+uint8_t eeprom[5] = {
+  0x1B, 0x05, 0x01, 0x41, 0x00
 };
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
 void setup(void)
 {
-  Wire.begin(0x50);                // join i2c bus with address #4
+  Wire.begin(0x50);                // Join i2c bus with address #50 to simulate AT24C32 eeprom
   Wire.onRequest(requestEvent); 
   Wire.onReceive(receiveEvent);
   
   SerialUSB.begin(9600);
 
-  tft.init(240, 240);           // Init ST7789 240x240
+  tft.init(240, 240);             // Init ST7789 240x240
   tft.setRotation(2);
 
   tft.fillScreen(ST77XX_WHITE);
@@ -81,7 +78,7 @@ void loop()
 }
 
 
-void render(const uint16_t dg_face[], int16_t siz, int16_t offset_x, int16_t offset_y, int16_t pixel_size, int16_t rez_x)
+void render(const uint16_t pixel_array[], int16_t siz, int16_t offset_x, int16_t offset_y, int16_t pixel_size, int16_t rez_x)
 {
   int16_t x_loc = 0;
   int16_t y_loc = 0;
@@ -93,7 +90,7 @@ void render(const uint16_t dg_face[], int16_t siz, int16_t offset_x, int16_t off
   {    
     x = (x_loc * pixel_size) + offset_x; 
     y = (y_loc * pixel_size) + offset_y;
-    tft.fillRect(x, y, pixel_size, pixel_size, dg_face[x_loc + (y_loc * rez_x)]);
+    tft.fillRect(x, y, pixel_size, pixel_size, pixel_array[x_loc + (y_loc * rez_x)]);
   
     x_loc++;
     if(x_loc == rez_x)
@@ -106,30 +103,74 @@ void render(const uint16_t dg_face[], int16_t siz, int16_t offset_x, int16_t off
   return;
 }
 
-// function that executes whenever data is received from master
-// this function is registered as an event, see setup()
+void write_to_eeprom(uint8_t address, uint8_t value)
+{
+  SerialUSB.print("Write ");
+  SerialUSB.print(value,HEX);
+  SerialUSB.print(" to location ");
+  SerialUSB.println(address, HEX);
+
+  // Make sure address is not in the protected area!
+  if(address >= 0x04)
+  {
+    eeprom[address] = value;
+  }
+  else
+  {
+    SerialUSB.print("Woah can't overwrite address: ");
+    SerialUSB.println(address);
+  }
+  return;
+}
+
 void receiveEvent(int howMany)
 {
-  SerialUSB.println("receiveEvent");
-  SerialUSB.print("How Many Bytes: ");
+  SerialUSB.print("receiveEvent bytes received: ");
   SerialUSB.println(howMany);
-  
-  while(1 < Wire.available()) // loop through all but the last
+
+  // 1 Byte Received. This is a Read From EEPROM Operation. 
+  if(howMany == 1)
   {
-    SerialUSB.println("Wire Available");
-    char c = Wire.read(); // receive byte as a character
-    SerialUSB.println(byte(c));         // print the character
+    uint8_t x = Wire.read();                 // receive byte
+    mem_write_address = x;
+    SerialUSB.println(byte(x), HEX);
   }
-  int x = Wire.read();    // receive byte as an integer
-  mem_address = x;
-  SerialUSB.println(byte(x));         // print the integer
+  // 2 Bytes Received. This is a Write to EEPROM Operation
+  else if(howMany == 2)
+  {
+    uint8_t eeprom_address = Wire.read();    // receive byte
+    uint8_t value = Wire.read();             // receive byte
+    write_to_eeprom(eeprom_address, value);
+  }
+  // No more Bytes. Skip it!
+  else if(howMany == 0)
+  {
+    SerialUSB.println("No more bytes. Skip!");
+  }
+  // DOOM SAO does not support multi byte reads and writes
+  else
+  {
+    SerialUSB.println("To many bytes! Not Supported!");
+  }
 }
 
 void requestEvent()
-{
-    SerialUSB.println("requestEvent");
-    //char c = Wire.read();
-    //SerialUSB.println(byte(c));
-    Wire.write(eeprom[mem_address]);
+{    
+    // Check to see if the location exists!
+    if(mem_write_address < sizeof(eeprom))
+    {
+      SerialUSB.print("requestEvent sending: 0x");
+      SerialUSB.println(eeprom[mem_write_address], HEX);
+      Wire.write(eeprom[mem_write_address]);
+    }
+    // Location doesn't exist. Return 0x00.
+    else
+    {
+      SerialUSB.print("Woah that is not a real address: ");
+      SerialUSB.println(mem_write_address);
+      Wire.write(0x00);
+    }
+
+    mem_write_address = 0x00;
     return;
 }
