@@ -133,7 +133,6 @@ void receiveEvent(int howMany)
   {
     uint8_t x = Wire.read();                 // receive byte
     mem_write_address = x;
-    SerialUSB.println(byte(x), HEX);
   }
   // 2 Bytes Received. This is a Write to EEPROM Operation
   else if(howMany == 2)
