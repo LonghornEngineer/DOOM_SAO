@@ -113,8 +113,6 @@ void receiveEvent(int howMany)
   SerialUSB.println("receiveEvent");
   SerialUSB.print("How Many Bytes: ");
   SerialUSB.println(howMany);
-
-  uint8_t receive_buffer[howMany] = { 0 };
   
   while(1 < Wire.available()) // loop through all but the last
   {
