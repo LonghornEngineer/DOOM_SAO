@@ -5,6 +5,7 @@
 Software is written using the Arduino IDE 1.8.9. This document will explain how to setup the software environment to compile the firmware.
 
 ## Arduino Hardware Settings
+* Board Manager Package: Arduino SAMD Boards (32-bits ARM Cortex-M0+) Version 1.8.2
 * Board: Arduino M0
 
 ## Libraries
@@ -16,7 +17,11 @@ The following libraries need to be installed. These can be found through the Ard
 
 ## Modifying Libraries
 
-To make these libraries work with the DOOM SAO Hardware some modifications must be made. On windows these are located under *Documents\Arduino\libraries* if they where installed through the Arduino Library Manager.
+To make these libraries work with the DOOM SAO Hardware some modifications must be made. 
+
+In Windows these are located under *Documents\Arduino\libraries* if they were installed through the Arduino Library Manager.
+
+In Ubuntu Linux these are located under *$HOME/Arduino/libraries* if they were installed through the Arduino Library Manager.
 
 ### Enabling SPI_MODE3
 Since the hardware does not use the CS pin on the LCD we must change the GFX library from using SPI_MODE0 to SPI_MODE3. 
