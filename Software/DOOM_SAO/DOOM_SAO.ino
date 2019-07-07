@@ -36,7 +36,7 @@ uint8_t incomingByte = 0;
 uint8_t sao_serial_incoming_byte = 0;
 bool sao_serial_baud_selection = false;
 uint8_t sao_serial_translation_mode = 0;
-bool sao_serial_carrige_return = false;
+bool sao_god_mode_display = false;
 bool menu_display_start = true;
 bool menu_display_0 = false;
 bool menu_display_1 = true;
@@ -127,7 +127,7 @@ void mode_3_serial_sniffer(){
     menu_display_3 = false;
   }
 
-  if((sao_serial_baud_selection) && (sao_serial_translation_mode == 0) && (menu_display_3_mode)){
+  if((sao_serial_baud_selection) && (sao_serial_translation_mode == 0) && (menu_display_3_mode) && (!menu_display_3)){
     SerialUSB.println("Translation of the serial data");
     SerialUSB.println("1 - Raw Decimal Bytes");
     SerialUSB.println("2 - ASCII Charachters");
@@ -135,25 +135,15 @@ void mode_3_serial_sniffer(){
     menu_display_3_mode = false;
   }
 
-  if(sao_serial_carrige_return){
-    SerialUSB.print("SERIAL: "); 
-    sao_serial_carrige_return = false;
-  }
-
   if (SAOSERIAL.available() > 0) {
     sao_serial_incoming_byte = SAOSERIAL.read();
-      
-    if(sao_serial_incoming_byte == 13){
-      //A carrige return was read
-      SerialUSB.println(""); 
-      SerialUSB.print("SERIAL: ");   
-    }
-    if(sao_serial_translation_mode == 1)
-      SerialUSB.print(sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus
-    else
-      SerialUSB.print((char)sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus
     
-    SAOSERIAL.print((char)sao_serial_incoming_byte); //Pass through the raw bytes of what we saw, so the "intended" target gets it's serial data
+    if(sao_serial_translation_mode == 1)
+      SerialUSB.print(sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus, in decimal 
+    else
+      SerialUSB.print((char)sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus, in ASCII
+    
+    SAOSERIAL.print((char)sao_serial_incoming_byte); //Pass through the what we saw, so the "intended" target gets it's serial data
   }
 }
 
@@ -204,6 +194,7 @@ void menu(){
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
         sao_mode = incomingByte - 48;
+        sao_god_mode_display = true;
         if(sao_mode == 1) mode_1_dg(); //this prevents the i2c msgs from displaying before the submenu splash
       }
       break;
@@ -242,7 +233,6 @@ void menu(){
         sao_mode = 0;
         sao_serial_baud_selection = 0;
         sao_serial_translation_mode = 0;
-        sao_serial_carrige_return = true;
         SAOSERIAL.end();
         menu_display_0 = true;
         menu_display_3 = true;
@@ -267,7 +257,8 @@ void menu(){
         }
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
-        SerialUSB.print("SERIAL: ");
+        SerialUSB.print("SERIAL SNIFFER ACTIVE... \n");
+        SerialUSB.println(" \n");
       }
       break;
 
@@ -351,8 +342,12 @@ void loop()
     //Given non default modes 1-4 imply the user is interfaced via Serial USB, they are hardware hacking.
     //It is better to disable the animation and 10x500ms delays so they have real time control of the MCU.
     //Appropriately just display God Mode in this case.
+    //There is a boolean toggle because it wastes time to continually redraw the same image
+    if(sao_god_mode_display) {
+      render(dg_god_mode, sizeof(dg_god_mode)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      sao_god_mode_display = false;
+    }
     menu();
-    render(dg_god_mode, sizeof(dg_god_mode)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
   }
 }
 
