@@ -4,9 +4,11 @@
 #include "DG_Faces.h"
 #include "MF_Logo.h"
 
+
 #define TFT_CS        -1
 #define TFT_RST        9
 #define TFT_DC         8
+#define SAOSERIAL      Serial 
 
 int16_t dg_offset_x = 16;
 int16_t dg_offset_y = 0;
@@ -31,27 +33,255 @@ uint8_t eeprom[5] = {
 //SAO mode 4 is Custom Application for people to drop in their own code
 uint8_t sao_mode = 0;
 uint8_t incomingByte = 0;
+uint8_t sao_serial_incoming_byte = 0;
+bool sao_serial_baud_selection = false;
+uint8_t sao_serial_translation_mode = 0;
+bool sao_serial_carrige_return = false;
+bool menu_display_start = true;
+bool menu_display_0 = false;
+bool menu_display_1 = true;
+bool menu_display_2 = true;
+bool menu_display_3 = true;
+bool menu_display_3_mode = true;
+bool menu_display_4 = true;
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
-void mode_2_i2c_sniffer(){
-  //TODO
-  SerialUSB.println("I2C SAO Bus Sniffer - No code yet.");
-  SerialUSB.println("Press Q to quit back to the main menu.\n");
+void macro_splash(){
+  SerialUSB.println(" ");
+  SerialUSB.println("***********************************************************");
+  SerialUSB.println(" ");
+  SerialUSB.println("    DC27 Doom SAO - SAMD21 Arduino Compatible Dev Board");
+  SerialUSB.println(" ");
+  SerialUSB.println("                         ▓▓▓▓▓▓▓▓▓                         ");
+  SerialUSB.println("                       ▓▓▓▓▓▓▓▓▓▓▓▓▓                       ");
+  SerialUSB.println("                     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                     ");
+  SerialUSB.println("                   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                   ");
+  SerialUSB.println("                 ▓▓▓▓▓▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓▓▓                 ");
+  SerialUSB.println("               ▓▓▓▓▓▓▓▓▓▓▓       ▓▓▓▓▓▓▓▓▓▓▓               ");
+  SerialUSB.println("             ▓▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓▓▓▓▓▓▓▓             ");
+  SerialUSB.println("           ▓▓▓▓▓▓▓▓▓▓▓               ▓▓▓▓▓▓▓▓▓▓▓           ");
+  SerialUSB.println("         ▓▓▓▓▓▓▓▓▓▓▓                   ▓▓▓▓▓▓▓▓▓▓▓         ");
+  SerialUSB.println("       ▓▓▓▓▓▓▓▓▓▓▓▒          ▓▓▓▓▓▓▓     ▓▓▓▓▓▓▓▓▓▓▓       ");
+  SerialUSB.println("     ▓▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓   ▓▓▓▓     ▓▓▓▓▓▓▓▓▓▓▓     ");
+  SerialUSB.println("   ▓▓▓▓▓▓▓▓▓▓▓             ▓▓▒     ▓▓▓       ▓▓▓▓▓▓▓▓▓▓▓   ");
+  SerialUSB.println(" ▓▓▓▓▓▓▓▓▓▓▓               ▓▓▓     ▓▓▓         ▓▓▓▓▓▓▓▓▓▓▓ ");
+  SerialUSB.println("▓▓▓▓▓▓▓▓▓▓        ▓▓▓▓▓▓    ▓▓▓▓▓▓▓▓▓▓▓          ▓▓▓▓▓▓▓▓▓▓");
+  SerialUSB.println("▓▓▓▓▓▓▓▓         ▓▓▒  ▓▓▓          ▓▓▓▓▓▓          ▓▓▓▓▓▓▓▓");
+  SerialUSB.println("▓▓▓▓▓▓▓▓         ▓▓   ▒▓▓            ▓▓▓▓▓▓          ▓▓▓▓▓▓");
+  SerialUSB.println("▓▓▓▓▓▓▓▓▓▓        ▓▓▓▓▓▓▓▓▒            ▓▓▓▓▓▓          ▓▓▓▓");
+  SerialUSB.println("  ▓▓▓▓▓▓▓▓▓▓          ▒▓▓▓▓▓▒           ▒▓▓▓▓▓▓         ▓▓ ");
+  SerialUSB.println("    ▓▓▓▓▓▓▓▓▓▓          ▒▓▓▓▓▓▒           ▒▓▓▓▓▓▓          ");
+  SerialUSB.println("      ▓▓▓▓▓▓▓▓▓▓          ▒▓▓▓▓▓▒           ▓▓▓▓▓▓▓        ");
+  SerialUSB.println("        ▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓▓▓       ▓▓▓▓▓▓▓▓▓        ");
+  SerialUSB.println("          ▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓          ");
+  SerialUSB.println("            ▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓▓▓▓▓▓▓▓▓▓▓            ");
+  SerialUSB.println("              ▓▓▓▓▓▓▓▓▓▓           ▓▓▓▓▓▓▓▓▓▓              ");
+  SerialUSB.println("                ▓▓▓▓▓▓▓▓▓▓       ▓▓▓▓▓▓▓▓▓▓                ");
+  SerialUSB.println("                  ▓▓▓▓▓▓▓▓▓▓▒ ▒▓▓▓▓▓▓▓▓▓▓                  ");
+  SerialUSB.println("                    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                    ");
+  SerialUSB.println("                      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒                     ");
+  SerialUSB.println("                        ▓▓▓▓▓▓▓▓▓▓▓▒                       ");
+  SerialUSB.println(" ");
+  SerialUSB.println("***********************************************************");
+  SerialUSB.println(" ");
+  delay(100); //mitigates race condition and lost println #YOLO
 }
 
+void mode_1_dg(){
+  //TODO
+  if(menu_display_1){
+    SerialUSB.println("**Doom Guy Interface Mode**");
+    SerialUSB.println("Press Q to quit back to the main menu.\n");  
+    menu_display_1 = false; //this prevents infinite printing of the menu in loop   
+  }
+}
+
+void mode_2_i2c_sniffer(){
+  //TODO
+  if(menu_display_2){
+    SerialUSB.println("**I2C SAO Bus Sniffer**");
+    SerialUSB.println("No Code Yet?!");
+    SerialUSB.println("Press Q to quit back to the main menu.\n");  
+    menu_display_2 = false; //this prevents infinite printing of the menu in loop   
+  }
+}
 
 void mode_3_serial_sniffer(){
-  //TODO
-  SerialUSB.println("Serial Sniffer - No code yet.");
-  SerialUSB.println("Press Q to quit back to the main menu.\n");
+  //Since the default pads for serial are not used (RX~PB23, TX~PB22) we will use those
+  //If you want to get crazy and add more serial ports visit https://learn.sparkfun.com/tutorials/adding-more-sercom-ports-for-samd-boards
+
+  if(menu_display_3){
+    SerialUSB.println("**Serial UART Sniffer**");
+    SerialUSB.println("This allows you to passively man in the middle a target embedded systems serial line");
+    SerialUSB.println("Connect the source's serial TX to the SAO RX Pin PB23");
+    SerialUSB.println("Connect the target's serial RX to the SAO TX Pin PB22");
+    SerialUSB.println("Press Q to quit back to the main menu at any time\n");
+    
+    SerialUSB.println("1 - 9600 baud");
+    SerialUSB.println("2 - 19200 baud");
+    SerialUSB.println("3 - 38400 baud");
+    SerialUSB.println("4 - 57600 baud");
+    SerialUSB.println("5 - 115200 baud");
+    SerialUSB.print("Please select your target's baud rate 1..5: ");
+    menu_display_3 = false;
+  }
+
+  if((sao_serial_baud_selection) && (sao_serial_translation_mode == 0) && (menu_display_3_mode)){
+    SerialUSB.println("Translation of the serial data");
+    SerialUSB.println("1 - Raw Decimal Bytes");
+    SerialUSB.println("2 - ASCII Charachters");
+    SerialUSB.print("Please select your data translation option: ");
+    menu_display_3_mode = false;
+  }
+
+  if(sao_serial_carrige_return){
+    SerialUSB.print("SERIAL: "); 
+    sao_serial_carrige_return = false;
+  }
+
+  if (SAOSERIAL.available() > 0) {
+    sao_serial_incoming_byte = SAOSERIAL.read();
+      
+    if(sao_serial_incoming_byte == 13){
+      //A carrige return was read
+      SerialUSB.println(""); 
+      SerialUSB.print("SERIAL: ");   
+    }
+    if(sao_serial_translation_mode == 1)
+      SerialUSB.print(sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus
+    else
+      SerialUSB.print((char)sao_serial_incoming_byte); //So we can watch what is going across the serial uart bus
+    
+    SAOSERIAL.print((char)sao_serial_incoming_byte); //Pass through the raw bytes of what we saw, so the "intended" target gets it's serial data
+  }
 }
 
 void mode_4_custom_appliaction(){
   //TODO - This section is for others to add their own code for custom functionality
-  SerialUSB.println("No custom code added yet. How sad.");
-  SerialUSB.println("To get started visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
-  SerialUSB.println("Press Q to quit back to the main menu.\n");
+  if(menu_display_4){
+    SerialUSB.println("**Custom Application**");
+    SerialUSB.println("No custom code added yet. How sad.");
+    SerialUSB.println("To get started visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
+    SerialUSB.println("Press Q to quit back to the main menu.\n");  
+    menu_display_4 = false; //this prevents infinite printing of the menu in loop   
+  }
+}
+
+void menu(){
+  switch(sao_mode){
+    case 0:
+      //Start message which displays in loop
+      if(menu_display_start){
+        SerialUSB.println(" ");
+        SerialUSB.print("Press X to Start: ");
+      }
+
+      //Main menu display
+      if(menu_display_0){
+        macro_splash();
+        SerialUSB.println("1 - DOOM Guy  Interface Mode");
+        SerialUSB.println("2 - I2C SAO Bus Sniffer Mode");
+        SerialUSB.println("3 - Serial UART Sniffer Mode");
+        SerialUSB.println("4 - Custom  Application Mode");
+        SerialUSB.print("Please Select a Mode 1, 2, 3, 4: ");  
+        menu_display_0 = false; //this prevents infinite printing of the menu in loop   
+      }
+
+      incomingByte = SerialUSB.read();
+
+      //Parse input for 'X' or 'x' to kickoff the main menu
+      if(((incomingByte == 88) || (incomingByte == 120)) && (menu_display_0 == false)){
+        menu_display_start = false;
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        menu_display_0 = true;
+      }
+
+      //If valid input 1..4 put the SAO in to that mode
+      if((incomingByte > 48) && (incomingByte < 53) && (menu_display_start == false)){
+        //Byte recieved is in ASCII, subtract 48 to get to the decimal value
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        sao_mode = incomingByte - 48;
+        if(sao_mode == 1) mode_1_dg(); //this prevents the i2c msgs from displaying before the submenu splash
+      }
+      break;
+      
+    case 1: //DOOM Guy Interface Mode
+      //No Code to add, by default this is running in the background and entering
+      //This mode just toggles the println on, quitting toggles them off
+      mode_1_dg();
+      //Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        sao_mode = 0;
+        menu_display_0 = true;
+        menu_display_1 = true;
+        SerialUSB.println(" \n");
+      }
+      break;
+    
+    case 2: //I2C Sniffer Mode
+      mode_2_i2c_sniffer();
+      //Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        sao_mode = 0;
+        menu_display_0 = true;
+        menu_display_2 = true;
+      }
+      break;
+    
+    case 3: //Serial Bus Sniffer Mode
+      mode_3_serial_sniffer();
+      //Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        //Reset variables upon quitting
+        sao_mode = 0;
+        sao_serial_baud_selection = 0;
+        sao_serial_translation_mode = 0;
+        sao_serial_carrige_return = true;
+        SAOSERIAL.end();
+        menu_display_0 = true;
+        menu_display_3 = true;
+        menu_display_3_mode = true;
+      }
+      if((incomingByte > 48) && (incomingByte < 54) && (sao_serial_baud_selection == false)){
+        switch(incomingByte){
+          case 49 : SAOSERIAL.begin(9600); sao_serial_baud_selection = true; break;
+          case 50 : SAOSERIAL.begin(19200); sao_serial_baud_selection = true; break; 
+          case 51 : SAOSERIAL.begin(38400); sao_serial_baud_selection = true; break; 
+          case 52 : SAOSERIAL.begin(57600); sao_serial_baud_selection = true; break;
+          case 53 : SAOSERIAL.begin(115200); sao_serial_baud_selection = true; break;          
+        }
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        break;
+      }
+      if((incomingByte > 48) && (incomingByte < 51) && (sao_serial_baud_selection == true) && (sao_serial_translation_mode == 0)) {
+        switch((char)incomingByte){
+          case '1': sao_serial_translation_mode = 1; break;
+          case '2': sao_serial_translation_mode = 2; break;       
+        }
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        SerialUSB.print("SERIAL: ");
+      }
+      break;
+
+    case 4: //Custom Application Mode
+      mode_4_custom_appliaction();
+      //Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        sao_mode = 0;
+        menu_display_0 = true;
+        menu_display_4 = true;
+      }
+      break;
+  }
 }
 
 void setup(void)
@@ -70,65 +300,6 @@ void setup(void)
   render(MF_Logo, sizeof(MF_Logo)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
   delay(500);
   tft.fillScreen(ST77XX_WHITE);
-}
-
-void menu(){
-  switch(sao_mode){
-    case 0:
-      SerialUSB.println("1 - DOOM Guy  Interface Mode");
-      SerialUSB.println("2 - I2C SAO Bus Sniffer Mode");
-      SerialUSB.println("3 - Serial  Bus Sniffer Mode");
-      SerialUSB.println("4 - Custom  Application Mode");
-      SerialUSB.println("Q - Press Q to Quit Any Mode");
-      SerialUSB.println("Please Select a Mode 1, 2, 3, 4: ");
-      SerialUSB.println("");
-      incomingByte = SerialUSB.read();
-      if((incomingByte > 48) && (incomingByte < 53)){
-        //Byte recieved is in ASCII, subtract 48 to get to the decimal value
-        sao_mode = incomingByte - 48;
-      }
-      break;
-    
-    case 1: //DOOM Guy Interface Mode
-      //No Code to add, by default this is running in the background and entering
-      //This mode just toggles the println on, quitting toggles them off
-      //Press (Q or q) to quit back to main menu
-      incomingByte = SerialUSB.read();
-      if((incomingByte == 81) || (incomingByte == 113)){
-        sao_mode = 0;
-      }
-      break;
-    
-    case 2: //I2C Sniffer Mode
-      mode_2_i2c_sniffer();
-      //Press (Q or q) to quit back to main menu
-      incomingByte = SerialUSB.read();
-      if((incomingByte == 81) || (incomingByte == 113)){
-        sao_mode = 0;
-      }
-      break;
-    
-    case 3: //Serial Bus Sniffer Mode
-      mode_3_serial_sniffer();
-      //Press (Q or q) to quit back to main menu
-      incomingByte = SerialUSB.read();
-      if((incomingByte == 81) || (incomingByte == 113)){
-        sao_mode = 0;
-      }
-      break;
-
-    case 4: //Custom Application Mode
-      mode_4_custom_appliaction();
-      //Press (Q or q) to quit back to main menu
-      incomingByte = SerialUSB.read();
-      if((incomingByte == 81) || (incomingByte == 113)){
-        sao_mode = 0;
-      }
-      break;
-    
-    default:
-    break;
-  }
 }
 
 void loop()
