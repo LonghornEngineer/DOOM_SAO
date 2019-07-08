@@ -19,9 +19,9 @@ The DOOM SAO implements the [V1.69bis standard](https://hackaday.com/2019/03/20/
 
 The I2C address for DOOM SAO is 0x50. This is the standard address for the I2C AT24C32 EEPROM. Over the I2C interface, DOOM SAO acts like a simulated EEPROM. Only single byte reads and writes are supported. Attempting to do multi byte reads or writes are not implemented at this time. For identification purposes the first 3 address locations are used. See the [AND!XOR SAO Reference Design](https://github.com/ANDnXOR/sao-reference-designs) for more information. Below is the EEPROM address structure. 
 
-| 0			| 1			| 2 			| 3...n		|
-|:-:		|:-:		|:-:			|:-:		|
-| 0x1B	| 0x05	| 0x01 	| Data 		|
+| 0		| 1		| 2 	| 3...n	|
+|:-:	|:-:	|:-:	|:-:	|
+| 0x1B	| 0x05	| 0x01	| Data	|
 
 * Address 0 is the DC Year. Use 0x1B for DC27.
 * Address 1 is my Maker ID which is a unique identifier for SAO maker, I chose 0x05 at random for my maker ID. I do not know if there is a list of these ¯\_(ツ)_/¯.
@@ -32,12 +32,13 @@ First 3 addresses are protected and can not be overwritten unless you change the
 
 ### EEPROM Addresses
 
-| Address		| Content		| Protected?		|
-|:-:		|:-:		|:-:		|
-| 0x00 | DC Year	| Yes		|
-| 0x01 | Maker ID	| Yes		|
-| 0x02 | SAO ID	| Yes		|
-| 0x03 | AutoMode	| No		|
+| Address	| Content	| Default Value	| Protected?	|
+|:-:		|:-:		|:-:			|:-:			|
+| 0x00		| DC Year	| 0x1B			| Yes			|
+| 0x01		| Maker ID	| 0x05			| Yes			|
+| 0x02		| SAO ID	| 0x01			| Yes			|
+| 0x03		| AutoMode	| 0x01			| No			|
+| 0x04		| Health	| 0x64			| No			|
 
 ### EEPROM functionality (quirks to note) 
 
@@ -46,8 +47,16 @@ Reading data locations that do not exist will return with data 0x00.
 
 ### What is Auto Mode?
 
-When first booted up, DOOM SAO defaults to an auto mode. In this mode, Doom Guy looks left and right in an alternating manner with no control from the Badge.
+When first booted up, DOOM SAO defaults to an auto mode. In this mode, Doom Guy looks left and right in an alternating manner with no control from the Badge. Writing a 0x00 value to this address diables auto mode and allows the GPIO to control DOOM Guy. With auto mode disabled, GPIO 1 makes DOOM Guy look left and GPIO 2 makes DOOM Guy look right. Truth table below.
 
+| GPIO 1	| GPIO 2	| What Happens?			|
+|:-:		|:-:		|:-:					|
+| 0			| 0			| DG Looks Forward		|
+| 1			| 0			| DG Looks Left			|
+| 0			| 1			| DG Looks Right		|
+| 1			| 1			| DG Looks Backwards	|
+
+### What is Health?
 
 ***
 **License Information**
