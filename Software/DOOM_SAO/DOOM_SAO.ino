@@ -24,13 +24,13 @@
  * badges as we are in making them.
  *
  * Contributors:
- *   @andnxor
+ *  @Cr4bf04m
+ *  @andnxor
  *  @zappbrandnxor
  *  @hyr0n1
  *  @bender_andnxor
  *  @lacosteaef
  *  @f4nci3
- *  @Cr4bf04m
  ****************************************************************************
  */
 
