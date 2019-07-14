@@ -51,6 +51,9 @@ uint8_t sao_serial_translation_mode = 0;
 bool sao_god_mode_display = false;
 bool interface_addr_selection = false;
 bool interface_value_selection = false;
+uint8_t interface_addr = 0;
+uint8_t interface_value = 0;
+int inChar = 0;
 bool menu_display_start = true;
 bool menu_display_0 = false;
 bool menu_display_1 = true;
@@ -60,7 +63,7 @@ bool menu_display_3 = true;
 bool menu_display_4 = true;
 bool menu_display_4_1 = true;
 bool menu_display_5 = true;
-String buf = "";
+String inString = "";   
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
@@ -107,30 +110,44 @@ void macro_splash()
   delay(100); 
 }
 
+void printHex(int num, int precision) {
+     char tmp[16];
+     char format[128];
+     sprintf(format, "0x%%.%dX", precision);
+     sprintf(tmp, format, num);
+     SerialUSB.print(tmp);
+}
+
 void mode_1_dg_interface()
 {
   if(menu_display_1){
     SerialUSB.println("**Doom Guy Interface Mode**");
     SerialUSB.println("Press Q to quit back to the main menu");  
     SerialUSB.println("For details visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
-    SerialUSB.println("----------------------------------------------");  
-    SerialUSB.println("|ADDRESS|  0 |  1 |  2 |  3 |  4 |  5 | 6..n |");
-    SerialUSB.println(" --------------------------------------------");
-    SerialUSB.println("|DEFAULT| 1B | 05 | 01 | 01 | 64 | 00 | ???? |");
-    SerialUSB.println("----------------------------------------------");
-    SerialUSB.println("*Address 0..2 are protected");
+    SerialUSB.println("-----------------------------------------------------------------");  
+    SerialUSB.println("|EEPROM ADDRESS|   0  |   1  |   2  |   3  |   4  |   5  | 6..n |");
+    SerialUSB.println("-----------------------------------------------------------------");
+    SerialUSB.print("|CURRENT  VALUE| ");
+    for(int i = 0; i <6; i++){
+      printHex(eeprom[i],2);  
+      SerialUSB.print(" | ");
+    }
+    SerialUSB.println("???? |");    
+    SerialUSB.println("-----------------------------------------------------------------");
+    SerialUSB.println("|DEFAULT  VALUE| 0x1B | 0x05 | 0x01 | 0x01 | 0x64 | 0x00 | ???? |");
+    SerialUSB.println("-----------------------------------------------------------------");
+    SerialUSB.println("*Address 0..2 Are Protected");
     SerialUSB.println("*Address 3 is AutoMode Toggle");
-    SerialUSB.println("*Address 4 is Health (0x00 - 0x64)");
+    SerialUSB.println("*Address 4 is Health");
     SerialUSB.println("*Address 5 is Anger");
-    SerialUSB.println("*Address 6..n are Sekret Data...");
-    SerialUSB.println("*Address 6..n are Sekret Data...");
+    SerialUSB.println("*Address 6..n Are Sekret Data...");
     SerialUSB.print("Please select your target address (3..n): ");
     menu_display_1 = false; //this prevents infinite printing of the menu in loop   
   }
 
   if((interface_addr_selection) && (!interface_value_selection) && (menu_display_1_1) && (!menu_display_1))
   {
-    SerialUSB.print("Please enter your value in hex (e.g. 4F): ");
+    SerialUSB.print("Please enter the new value for this address in decimal: ");
     menu_display_1_1 = false;
   }
 }
@@ -218,6 +235,8 @@ void mode_5_custom_appliaction()
 }
 
 void menu(){
+  //The purpose of the menu function is to externally call the sub-menu displays
+  //Then within each case statement the processing logic for that menu is contained
   switch(sao_mode){
     case 0:
       // Start message which displays in loop
@@ -254,55 +273,76 @@ void menu(){
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
         sao_mode = incomingByte - 48;
+        while(Serial.available() > 0) incomingByte = Serial.read(); //empty the buffer
         if(sao_mode > 1) sao_god_mode_display = true; //We want the face draws during interactive menu (option 1)
         if(sao_mode == 2) mode_2_dg_sniffer(); // This prevents the i2c msgs from displaying before the submenu splash
       }
       break;
 
     // DOOM Guy Interface Mode
-    // No Code to add, by default this is running in the background and entering
-    // This mode just toggles the println on, quitting toggles them off
     case 1: 
-      mode_1_dg_interface();
-      // Press (Q or q) to quit back to main menu
-      incomingByte = SerialUSB.read();
-      if((incomingByte == 81) || (incomingByte == 113)){
-        sao_mode = 0;
-        menu_display_0 = true;
-        menu_display_1 = true;
-        menu_display_1_1 = true;
-        SerialUSB.println(" \n");        
-      }
-
-      //WIP WILL FINISH TOMOROW
-      /*
-
-      if((incomingByte > 48) && (incomingByte < 54) && (interface_addr_selection == false)){
-        switch(incomingByte){
-          case 49 : SAOSERIAL.begin(9600); sao_serial_baud_selection = true; break;
-          case 50 : SAOSERIAL.begin(19200); sao_serial_baud_selection = true; break; 
-          case 51 : SAOSERIAL.begin(38400); sao_serial_baud_selection = true; break; 
-          case 52 : SAOSERIAL.begin(57600); sao_serial_baud_selection = true; break;
-          case 53 : SAOSERIAL.begin(115200); sao_serial_baud_selection = true; break;          
-        }
-        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal - //TODO maybe delete this cuz most terminals echo anyway, just not arduino
-        SerialUSB.println(" \n");
-        break;
-      }
-      if((incomingByte > 48) && (incomingByte < 51) && (interface_addr_selection == true) && (interface_value_selection == false)) {
-        switch((char)incomingByte){
-          case '1': sao_serial_translation_mode = 1; break;
-          case '2': sao_serial_translation_mode = 2; break;       
-        }
-        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
-        SerialUSB.println(" \n");
-        SerialUSB.print("SERIAL SNIFFER ACTIVE... \n");
-        SerialUSB.println(" \n");
-      }
-      */
+      mode_1_dg_interface();     
       
-      //END WIP
-      
+      //Clear the Buffers
+      inString = ""; // clear the buffer for new input
+    
+      //This parses the input for ASCII numbers, charachters will be ignored (except Q or q for Quit)
+      while (SerialUSB.available() > 0) {
+        inChar = SerialUSB.read();
+        if (isAlpha(inChar)){
+          if(((char)inChar == 'q') || ((char)inChar == 'Q')){
+            // Press (Q or q) to quit back to main menu
+            sao_mode = 0;
+            menu_display_0 = true;
+            menu_display_1 = true;
+            menu_display_1_1 = true;
+            SerialUSB.println(" \n");  
+            break;      
+          }
+        }
+        
+        if (isDigit(inChar)) {
+          // convert the incoming byte to a char and add it to the string:
+          inString += (char)inChar;
+        }
+        // if you get a newline, parse the input
+        if ((inChar == '\n') && (inString.length() > 0)) {
+          if(!interface_addr_selection){
+            //Assign the address
+            interface_addr = inString.toInt();
+            interface_addr_selection = true;
+            //Echo User Input to the Terminal
+            SerialUSB.println(inString);
+          }
+          else if((interface_addr_selection)&&(!interface_value_selection)){
+            //Assign the value
+            interface_value = inString.toInt();
+            interface_value_selection = true;
+            //Echo User Input to the Terminal
+            SerialUSB.println(inString);
+          }
+          
+          if((interface_addr_selection)&&(interface_value_selection)){
+            //Display update criteria
+            SerialUSB.print("Writing to EEPROM at Address(");
+            SerialUSB.print(interface_addr);
+            SerialUSB.print(") the Hex Value(0x");
+            SerialUSB.print(interface_value,HEX); 
+            SerialUSB.println(")\n");
+            
+            //Update the EEPROM
+            //TODO
+            
+            //Reset Variables so the interactive menu appears again
+            interface_addr_selection = false;
+            interface_value_selection = false;
+            menu_display_1 = true;
+            menu_display_1_1 = true;
+            break;
+          }
+          inString = ""; // clear the buffer for new input
+        }
+      }      
       break;
       
 
