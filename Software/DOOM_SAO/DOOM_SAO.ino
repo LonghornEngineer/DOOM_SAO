@@ -347,7 +347,26 @@ void loop()
     // Automode Disabled! ASSUMING DIRECT BADGE CONTROL!
     else
     {
-      cycle = 1;
+      // Look Forward
+      if (digitalRead(GPIO1) == 0 && digitalRead(GPIO2) == 0)
+      {
+        cycle = 1;
+      }
+      // Look Left
+      else if (digitalRead(GPIO1) == 1 && digitalRead(GPIO2) == 0)
+      {
+        cycle = 0;
+      }
+      // Look Right
+      else if (digitalRead(GPIO1) == 0 && digitalRead(GPIO2) == 1)
+      {
+        cycle = 2;
+      }
+      // Whut?!
+      else
+      {
+        cycle = 3;
+      }
     }
     run_sao_mode_0(cycle);
     delay(500);
