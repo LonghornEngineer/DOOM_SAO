@@ -1,39 +1,3 @@
-/*****************************************************************************
- * Made with beer and late nights in California.
- *
- * (C) Copyright 2017-2019 AND!XOR LLC (https://andnxor.com/).
- *
- * PROPRIETARY AND CONFIDENTIAL UNTIL AUGUST 11th, 2019 then,
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ADDITIONALLY:
- * If you find this source code useful in anyway, use it in another electronic
- * conference badge, or just think it's neat. Consider buying us a beer
- * (or two) and/or a badge (or two). We are just as obsessed with collecting
- * badges as we are in making them.
- *
- * Contributors:
- *  @Cr4bf04m
- *  @andnxor
- *  @zappbrandnxor
- *  @hyr0n1
- *  @bender_andnxor
- *  @lacosteaef
- *  @f4nci3
- ****************************************************************************
- */
-
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <Wire.h>
@@ -58,6 +22,7 @@ int16_t mf_pixel_size = 4;
 int16_t mf_rez_x = 60;
 
 uint8_t automode_cycle = 0x00;
+uint8_t cycle = 0x00;
 uint8_t mem_write_address = 0x00;
 uint8_t mem_write_address_valid = 0x00;
 
@@ -372,237 +337,20 @@ void loop()
     // Automode ENABLED!
     if(eeprom[3] == 1)
     {
-      // DG not Angry
-      if(eeprom[5] == 0)
-      {
-        // DG Health 80 or higher
-        if(eeprom[4] >= 0x50)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_FullHP_left, sizeof(dg_FullHP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_FullHP_middle, sizeof(dg_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_FullHP_right, sizeof(dg_FullHP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_FullHP_middle, sizeof(dg_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 60 or higher
-        else if(eeprom[4] >= 0x3C)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_80HP_left, sizeof(dg_80HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {          
-            render(dg_80HP_middle, sizeof(dg_80HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_80HP_right, sizeof(dg_80HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_80HP_middle, sizeof(dg_80HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 40 or higher
-        else if(eeprom[4] >= 0x28)
-        {    
-          if(automode_cycle == 0)
-          {      
-            render(dg_60HP_left, sizeof(dg_60HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_60HP_middle, sizeof(dg_60HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_60HP_right, sizeof(dg_60HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_60HP_middle, sizeof(dg_60HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 20 or higher
-        else if(eeprom[4] >= 0x14)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_40HP_left, sizeof(dg_40HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_40HP_right, sizeof(dg_40HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
-          }
-        }
-        // DG Health 1 or higher     
-        else if(eeprom[4] > 0x0)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_20HP_left, sizeof(dg_20HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_20HP_right, sizeof(dg_20HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
-          }
-        }
-        // DG DEAD. HEALTH = 0
-        else
-        {
-          render(dg_dead, sizeof(dg_dead)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);         
-        }
-      }
-      // DG ANGRY!
-      else
-      {
-        // DG Health 80 or higher
-        if(eeprom[4] >= 0x50)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_FullHP_angry_left, sizeof(dg_FullHP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_FullHP_angry_middle, sizeof(dg_FullHP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_FullHP_angry_right, sizeof(dg_FullHP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_FullHP_angry_middle, sizeof(dg_FullHP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 60 or higher
-        else if(eeprom[4] >= 0x3C)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_80HP_angry_left, sizeof(dg_80HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_80HP_angry_right, sizeof(dg_80HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 40 or higher
-        else if(eeprom[4] >= 0x28)
-        {        
-          if(automode_cycle == 0)
-          {  
-            render(dg_60HP_angry_left, sizeof(dg_60HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          } 
-          else if(automode_cycle == 1)
-          {
-            render(dg_60HP_angry_middle, sizeof(dg_60HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_60HP_angry_right, sizeof(dg_60HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_60HP_angry_middle, sizeof(dg_60HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG Health 20 or higher
-        else if(eeprom[4] >= 0x14)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_40HP_angry_left, sizeof(dg_40HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_40HP_angry_right, sizeof(dg_40HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x); 
-          }
-        }
-        // DG Health 1 or higher     
-        else if(eeprom[4] > 0x00)
-        {
-          if(automode_cycle == 0)
-          {
-            render(dg_20HP_angry_left, sizeof(dg_20HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 1)
-          {
-            render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else if(automode_cycle == 2)
-          {
-            render(dg_20HP_angry_right, sizeof(dg_20HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-          else
-          {
-            render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-          }
-        }
-        // DG DEAD. HEALTH = 0
-        else
-        {
-          render(dg_dead, sizeof(dg_dead)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);           
-        }        
-      }
       automode_cycle++;
       if(automode_cycle > 3)
       {
         automode_cycle = 0;
       }
-      delay(500);
+      cycle = automode_cycle;
     }
     // Automode Disabled! ASSUMING DIRECT BADGE CONTROL!
     else
     {
-
-      
+      cycle = 1;
     }
+    run_sao_mode_0(cycle);
+    delay(500);
   }
   
   // Given non default modes 1-4 imply the user is interfaced via Serial USB, they are hardware hacking.
@@ -618,6 +366,229 @@ void loop()
     }
     menu();
   }
+}
+
+void run_sao_mode_0(uint8_t face_dir)
+{
+  //DG Happy!
+  if(eeprom[5] == 0)
+  {
+    // DG Health 80 or higher
+    if(eeprom[4] >= 0x50)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_FullHP_left, sizeof(dg_FullHP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_FullHP_middle, sizeof(dg_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_FullHP_right, sizeof(dg_FullHP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_FullHP_middle, sizeof(dg_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 60 or higher
+    else if(eeprom[4] >= 0x3C)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_80HP_left, sizeof(dg_80HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {          
+        render(dg_80HP_middle, sizeof(dg_80HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_80HP_right, sizeof(dg_80HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_80HP_middle, sizeof(dg_80HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 40 or higher
+    else if(eeprom[4] >= 0x28)
+    {    
+      if(face_dir == 0)
+      {      
+        render(dg_60HP_left, sizeof(dg_60HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_60HP_middle, sizeof(dg_60HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_60HP_right, sizeof(dg_60HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_60HP_middle, sizeof(dg_60HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 20 or higher
+    else if(eeprom[4] >= 0x14)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_40HP_left, sizeof(dg_40HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_40HP_right, sizeof(dg_40HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
+      }
+    }
+    // DG Health 1 or higher     
+    else if(eeprom[4] > 0x0)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_20HP_left, sizeof(dg_20HP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_20HP_right, sizeof(dg_20HP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
+      }
+    }
+    // DG DEAD. HEALTH = 0
+    else
+    {
+      render(dg_dead, sizeof(dg_dead)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);         
+    }
+  }
+  // DG ANGRY!
+  else
+  {
+    // DG Health 80 or higher
+    if(eeprom[4] >= 0x50)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_FullHP_angry_left, sizeof(dg_FullHP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_FullHP_angry_middle, sizeof(dg_FullHP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_FullHP_angry_right, sizeof(dg_FullHP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_FullHP_angry_middle, sizeof(dg_FullHP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 60 or higher
+    else if(eeprom[4] >= 0x3C)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_80HP_angry_left, sizeof(dg_80HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_80HP_angry_right, sizeof(dg_80HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 40 or higher
+    else if(eeprom[4] >= 0x28)
+    {        
+      if(face_dir == 0)
+      {  
+        render(dg_60HP_angry_left, sizeof(dg_60HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      } 
+      else if(face_dir == 1)
+      {
+        render(dg_60HP_angry_middle, sizeof(dg_60HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_60HP_angry_right, sizeof(dg_60HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_60HP_angry_middle, sizeof(dg_60HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG Health 20 or higher
+    else if(eeprom[4] >= 0x14)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_40HP_angry_left, sizeof(dg_40HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_40HP_angry_right, sizeof(dg_40HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x); 
+      }
+    }
+    // DG Health 1 or higher     
+    else if(eeprom[4] > 0x00)
+    {
+      if(face_dir == 0)
+      {
+        render(dg_20HP_angry_left, sizeof(dg_20HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(dg_20HP_angry_right, sizeof(dg_20HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    // DG DEAD. HEALTH = 0
+    else
+    {
+      render(dg_dead, sizeof(dg_dead)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);           
+    }        
+  }
+  return;
 }
 
 
