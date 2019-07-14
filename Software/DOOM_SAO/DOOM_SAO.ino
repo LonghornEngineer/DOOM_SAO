@@ -49,13 +49,18 @@ uint8_t sao_serial_incoming_byte = 0;
 bool sao_serial_baud_selection = false;
 uint8_t sao_serial_translation_mode = 0;
 bool sao_god_mode_display = false;
+bool interface_addr_selection = false;
+bool interface_value_selection = false;
 bool menu_display_start = true;
 bool menu_display_0 = false;
 bool menu_display_1 = true;
+bool menu_display_1_1 = true;
 bool menu_display_2 = true;
 bool menu_display_3 = true;
-bool menu_display_3_mode = true;
 bool menu_display_4 = true;
+bool menu_display_4_1 = true;
+bool menu_display_5 = true;
+String buf = "";
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
@@ -102,32 +107,59 @@ void macro_splash()
   delay(100); 
 }
 
-void mode_1_dg()
+void mode_1_dg_interface()
 {
-  // TODO
   if(menu_display_1){
     SerialUSB.println("**Doom Guy Interface Mode**");
-    SerialUSB.println("Press Q to quit back to the main menu.\n");  
+    SerialUSB.println("Press Q to quit back to the main menu");  
+    SerialUSB.println("For details visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
+    SerialUSB.println("----------------------------------------------");  
+    SerialUSB.println("|ADDRESS|  0 |  1 |  2 |  3 |  4 |  5 | 6..n |");
+    SerialUSB.println(" --------------------------------------------");
+    SerialUSB.println("|DEFAULT| 1B | 05 | 01 | 01 | 64 | 00 | ???? |");
+    SerialUSB.println("----------------------------------------------");
+    SerialUSB.println("*Address 0..2 are protected");
+    SerialUSB.println("*Address 3 is AutoMode Toggle");
+    SerialUSB.println("*Address 4 is Health (0x00 - 0x64)");
+    SerialUSB.println("*Address 5 is Anger");
+    SerialUSB.println("*Address 6..n are Sekret Data...");
+    SerialUSB.println("*Address 6..n are Sekret Data...");
+    SerialUSB.print("Please select your target address (3..n): ");
     menu_display_1 = false; //this prevents infinite printing of the menu in loop   
+  }
+
+  if((interface_addr_selection) && (!interface_value_selection) && (menu_display_1_1) && (!menu_display_1))
+  {
+    SerialUSB.print("Please enter your value in hex (e.g. 4F): ");
+    menu_display_1_1 = false;
   }
 }
 
-void mode_2_i2c_sniffer()
+void mode_2_dg_sniffer()
 {
-  // TODO
   if(menu_display_2){
-    SerialUSB.println("**I2C SAO Bus Sniffer**");
-    SerialUSB.println("No Code Yet?!");
+    SerialUSB.println("**Doom Guy Bus Sniffer Mode**");
     SerialUSB.println("Press Q to quit back to the main menu.\n");  
     menu_display_2 = false; //this prevents infinite printing of the menu in loop   
   }
 }
 
-void mode_3_serial_sniffer()
+void mode_3_i2c_sniffer()
+{
+  // TODO
+  if(menu_display_3){
+    SerialUSB.println("**I2C SAO Bus Sniffer**");
+    SerialUSB.println("No Code Yet?!");
+    SerialUSB.println("Press Q to quit back to the main menu.\n");  
+    menu_display_3 = false; //this prevents infinite printing of the menu in loop   
+  }
+}
+
+void mode_4_serial_sniffer()
 {
   // Since the default pads for serial are not used (RX~PB23, TX~PB22) we will use those
   // If you want to get crazy and add more serial ports visit https://learn.sparkfun.com/tutorials/adding-more-sercom-ports-for-samd-boards
-  if(menu_display_3)
+  if(menu_display_4)
   {
     SerialUSB.println("**Serial UART Sniffer**");
     SerialUSB.println("This allows you to passively man in the middle a target embedded systems serial line");
@@ -141,16 +173,16 @@ void mode_3_serial_sniffer()
     SerialUSB.println("4 - 57600 baud");
     SerialUSB.println("5 - 115200 baud");
     SerialUSB.print("Please select your target's baud rate 1..5: ");
-    menu_display_3 = false;
+    menu_display_4 = false;
   }
 
-  if((sao_serial_baud_selection) && (sao_serial_translation_mode == 0) && (menu_display_3_mode) && (!menu_display_3))
+  if((sao_serial_baud_selection) && (sao_serial_translation_mode == 0) && (menu_display_4_1) && (!menu_display_4))
   {
     SerialUSB.println("Translation of the serial data");
     SerialUSB.println("1 - Raw Decimal Bytes");
     SerialUSB.println("2 - ASCII Charachters");
     SerialUSB.print("Please select your data translation option: ");
-    menu_display_3_mode = false;
+    menu_display_4_1 = false;
   }
 
   if (SAOSERIAL.available() > 0) 
@@ -172,16 +204,16 @@ void mode_3_serial_sniffer()
   }
 }
 
-void mode_4_custom_appliaction()
+void mode_5_custom_appliaction()
 {
   // TODO - This section is for others to add their own code for custom functionality
-  if(menu_display_4)
+  if(menu_display_5)
   {
     SerialUSB.println("**Custom Application**");
     SerialUSB.println("No custom code added yet. How sad.");
     SerialUSB.println("To get started visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
     SerialUSB.println("Press Q to quit back to the main menu.\n");  
-    menu_display_4 = false; //this prevents infinite printing of the menu in loop   
+    menu_display_5 = false; //this prevents infinite printing of the menu in loop   
   }
 }
 
@@ -197,11 +229,12 @@ void menu(){
       // Main menu display
       if(menu_display_0){
         macro_splash();
-        SerialUSB.println("1 - DOOM Guy  Interface Mode");
-        SerialUSB.println("2 - I2C SAO Bus Sniffer Mode");
-        SerialUSB.println("3 - Serial UART Sniffer Mode");
-        SerialUSB.println("4 - Custom  Application Mode");
-        SerialUSB.print("Please Select a Mode 1, 2, 3, 4: ");  
+        SerialUSB.println("1 - DOOM Guy   Interface Mode");
+        SerialUSB.println("2 - DOOM Guy Bus Sniffer Mode");
+        SerialUSB.println("3 - I2C SAO  Bus Sniffer Mode");
+        SerialUSB.println("4 - Serial UART  Sniffer Mode");
+        SerialUSB.println("5 - Custom  Application  Mode");
+        SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5: ");  
         menu_display_0 = false; //this prevents infinite printing of the menu in loop   
       }
 
@@ -215,15 +248,14 @@ void menu(){
         menu_display_0 = true;
       }
 
-      // If valid input 1..4 put the SAO in to that mode
-      if((incomingByte > 48) && (incomingByte < 53) && (menu_display_start == false)){
+      // If valid input 1..5 put the SAO in to that mode
+      if((incomingByte > 48) && (incomingByte <= 53) && (menu_display_start == false)){
         // Byte recieved is in ASCII, subtract 48 to get to the decimal value
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
         sao_mode = incomingByte - 48;
-        sao_god_mode_display = true;
-        // This prevents the i2c msgs from displaying before the submenu splash
-        if(sao_mode == 1) mode_1_dg(); 
+        if(sao_mode > 1) sao_god_mode_display = true; //We want the face draws during interactive menu (option 1)
+        if(sao_mode == 2) mode_2_dg_sniffer(); // This prevents the i2c msgs from displaying before the submenu splash
       }
       break;
 
@@ -231,32 +263,79 @@ void menu(){
     // No Code to add, by default this is running in the background and entering
     // This mode just toggles the println on, quitting toggles them off
     case 1: 
-      mode_1_dg();
+      mode_1_dg_interface();
       // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
         menu_display_0 = true;
         menu_display_1 = true;
+        menu_display_1_1 = true;
+        SerialUSB.println(" \n");        
+      }
+
+      //WIP WILL FINISH TOMOROW
+      /*
+
+      if((incomingByte > 48) && (incomingByte < 54) && (interface_addr_selection == false)){
+        switch(incomingByte){
+          case 49 : SAOSERIAL.begin(9600); sao_serial_baud_selection = true; break;
+          case 50 : SAOSERIAL.begin(19200); sao_serial_baud_selection = true; break; 
+          case 51 : SAOSERIAL.begin(38400); sao_serial_baud_selection = true; break; 
+          case 52 : SAOSERIAL.begin(57600); sao_serial_baud_selection = true; break;
+          case 53 : SAOSERIAL.begin(115200); sao_serial_baud_selection = true; break;          
+        }
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal - //TODO maybe delete this cuz most terminals echo anyway, just not arduino
+        SerialUSB.println(" \n");
+        break;
+      }
+      if((incomingByte > 48) && (incomingByte < 51) && (interface_addr_selection == true) && (interface_value_selection == false)) {
+        switch((char)incomingByte){
+          case '1': sao_serial_translation_mode = 1; break;
+          case '2': sao_serial_translation_mode = 2; break;       
+        }
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        SerialUSB.print("SERIAL SNIFFER ACTIVE... \n");
         SerialUSB.println(" \n");
       }
+      */
+      
+      //END WIP
+      
       break;
       
-    // I2C Sniffer Mode
+
+    // DOOM Guy Bus Sniffer Mode
+    // No Code to add, by default this is running in the background and entering
+    // This mode just toggles the println on, quitting toggles them off
     case 2: 
-      mode_2_i2c_sniffer();
+      mode_2_dg_sniffer();
       // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
         menu_display_0 = true;
         menu_display_2 = true;
+        SerialUSB.println(" \n");
+      }
+      break;
+      
+    // I2C Sniffer Mode
+    case 3: 
+      mode_3_i2c_sniffer();
+      // Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        sao_mode = 0;
+        menu_display_0 = true;
+        menu_display_3 = true;
       }
       break;
       
     // Serial Bus Sniffer Mode
-    case 3: 
-      mode_3_serial_sniffer();
+    case 4: 
+      mode_4_serial_sniffer();
       // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
@@ -266,8 +345,8 @@ void menu(){
         sao_serial_translation_mode = 0;
         SAOSERIAL.end();
         menu_display_0 = true;
-        menu_display_3 = true;
-        menu_display_3_mode = true;
+        menu_display_4 = true;
+        menu_display_4_1 = true;
       }
       if((incomingByte > 48) && (incomingByte < 54) && (sao_serial_baud_selection == false)){
         switch(incomingByte){
@@ -294,14 +373,14 @@ void menu(){
       break;
       
     // Custom Application Mode
-    case 4: 
-      mode_4_custom_appliaction();
+    case 5: 
+      mode_5_custom_appliaction();
       // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
         menu_display_0 = true;
-        menu_display_4 = true;
+        menu_display_5 = true;
       }
       break;
   }
@@ -339,7 +418,7 @@ void loop()
   // If Badge Control mode: DG looks around depending on the state of GPIO 1/2
   // Depending on the heath value of the EEPROM DG will be more bloody!
   // Depending on the anger value of the EEPROM DG might be well....
-  if(sao_mode == 0)
+  if(sao_mode < 2)
   {
     menu();
     // Automode ENABLED!
@@ -380,7 +459,6 @@ void loop()
     delay(500);
   }
   
-  // Given non default modes 1-4 imply the user is interfaced via Serial USB, they are hardware hacking.
   // It is better to disable the animation and the delays so they have real time control of the MCU.
   // Appropriately just display God Mode in this case.
   // There is a boolean toggle because it wastes time to continually redraw the same image
@@ -646,7 +724,7 @@ void render(const uint16_t pixel_array[], int16_t siz, int16_t offset_x, int16_t
 
 void write_to_eeprom(uint8_t address, uint8_t value)
 {
-  if(sao_mode == 1){
+  if(sao_mode == 2){
     SerialUSB.print("Write ");
     SerialUSB.print(value,HEX);
     SerialUSB.print(" to location ");
@@ -660,7 +738,7 @@ void write_to_eeprom(uint8_t address, uint8_t value)
   }
   else
   {
-    if(sao_mode == 1){
+    if(sao_mode == 2){
       SerialUSB.print("Woah can't overwrite address: ");
       SerialUSB.println(address);
     }
@@ -670,7 +748,7 @@ void write_to_eeprom(uint8_t address, uint8_t value)
 
 void receiveEvent(int howMany)
 {
-  if(sao_mode == 1){
+  if(sao_mode == 2){
     SerialUSB.print("receiveEvent bytes received: ");
     SerialUSB.println(howMany);
   }
@@ -692,14 +770,14 @@ void receiveEvent(int howMany)
   // No more Bytes. Skip it!
   else if(howMany == 0)
   {
-    if(sao_mode == 1){
+    if(sao_mode == 2){
       SerialUSB.println("No more bytes. Skip!");
     }
   }
   // DOOM SAO does not support multi byte reads and writes
   else
   {
-    if(sao_mode == 1){
+    if(sao_mode == 2){
       SerialUSB.println("To many bytes! Not Supported!");
     }
   }
@@ -720,7 +798,7 @@ void requestEvent()
     // Check to see if the location exists!
     if(mem_write_address < sizeof(eeprom))
     {
-      if(sao_mode == 1){
+      if(sao_mode == 2){
         SerialUSB.print("requestEvent sending: 0x");
         SerialUSB.println(eeprom[mem_write_address], HEX);      
       }
@@ -729,7 +807,7 @@ void requestEvent()
     // Location doesn't exist. Return 0x00.
     else
     {
-      if(sao_mode == 1){
+      if(sao_mode == 2){
         SerialUSB.print("Woah that is not a real address: ");
         SerialUSB.println(mem_write_address);
       }
