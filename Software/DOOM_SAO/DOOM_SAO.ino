@@ -21,6 +21,7 @@ int16_t mf_pixel_size = 4;
 int16_t mf_rez_x = 60;
 
 uint8_t mem_write_address = 0x00;
+uint8_t mem_write_address_valid = 0x00;
 
 uint8_t eeprom[5] = {
   0x1B, 0x05, 0x01, 0x02, 0x64
@@ -408,14 +409,12 @@ void receiveEvent(int howMany)
     SerialUSB.println(howMany);
   }
 
-  // 1 Byte Received. This is a Read From EEPROM Operation. 
+  // 1 Byte Received. This is a Read From EEPROM Operation from a double i2c stop!
   if(howMany == 1)
   {
     uint8_t x = Wire.read();                 // receive byte
     mem_write_address = x;
-    SerialUSB.print("Address is: ");
-    SerialUSB.println(x, HEX);
-    SerialUSB.println("");
+    mem_write_address_valid = 1;
   }
   // 2 Bytes Received. This is a Write to EEPROM Operation
   else if(howMany == 2)
@@ -441,18 +440,23 @@ void receiveEvent(int howMany)
 }
 
 void requestEvent()
-{    
-    mem_write_address = Wire.read();
-    SerialUSB.println(mem_write_address,HEX);
+{   
+    // If requestEvent gets called before receiveEvent then we have a Read From EEPROM Operation from a single i2c stop!
+    // This means we need to read from the i2c buffer the address!
+    if(mem_write_address_valid == 0)
+    {
+      mem_write_address = Wire.read();
+    }
+    else
+    {
+      mem_write_address_valid = 0;
+    }
     // Check to see if the location exists!
     if(mem_write_address < sizeof(eeprom))
     {
       if(sao_mode == 1){
         SerialUSB.print("requestEvent sending: 0x");
-        SerialUSB.println(eeprom[mem_write_address], HEX);
-        SerialUSB.print("Address is: ");
-        SerialUSB.println(mem_write_address, HEX);
-        
+        SerialUSB.println(eeprom[mem_write_address], HEX);      
       }
       Wire.write(eeprom[mem_write_address]);
     }
