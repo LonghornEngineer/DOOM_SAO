@@ -10,10 +10,39 @@ The DOOM Shitty Add On (DOOM SAO) is an add on for conference badges that implem
 * Full implementation of the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/)
 * Auto mode for DOOM Guy for badges that are not DOOM SAO compatible
 * Serial Terminal accessible through the USB Type-C connector
+* Passive Hardware Bus Sniffing
+* User defined section for adding your own code
 * High DPI ST7789 1.3" 240x240 LCD Screen
 * USB Type-C configured for USB 2.0 (REVERSIBLE)
 
-## Interfacing with the DOOM SAO
+## Interfacing with the DOOM SAO via Serial UART
+
+Connection Settings: 9600/8/N/1
+
+Press 'X' to start the interactive menu.
+
+Press 1..4 to select sub-menu options.
+
+Press 'Q' within any sub-menu to quit to the main menu.
+
+Menu Options:
+
+1 - DOOM Guy Bus Monitor Mode
+This allows you to see the interactions between the SAO and the host.
+
+2 - I2C SAO Bus Sniffer Mode
+This allows you to monitor the entire I2C bus. If a host has more than one SAO port you can see what magic bytes and data it is transmitting...
+
+3 - Serial UART Sniffer Mode
+This allows you to passively man in the middle another embedded system's serial UART line. 
+Connect the source's serial TX to the SAO RX Pin PB23.
+Connect the target's serial RX to the SAO TX Pin PB22.
+Choose the appropriate baud rate and byte translation (ASCII or DEC).
+
+4 - Custom  Application Mode
+This is the area for YOU to add your own code.
+
+## Interfacing with the DOOM SAO via I2C
 
 The DOOM SAO implements the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/) for SAO devices and follows the [AND!XOR SAO Reference Design](https://github.com/ANDnXOR/sao-reference-designs). What this means is that using the I2C interface and GPIO pins of the V1.69bis standard users will be able to control how DOOM Guy acts and behaves.
 

@@ -45,37 +45,6 @@ The DOOM_SAO.ino file should compile correctly in the Arduino IDE now.
 
 ## Overview of the Firmware
 
-Interactive features can be interface either through serial UART or over the I2C bus.
-
-### Serial Interactivity
-
-Connection Settings: 9600/8/N/1
-
-Press 'X' to start the interactive menu.
-
-Press 1..4 to select sub-menu options.
-
-Press 'Q' within any sub-menu to quit to the main menu.
-
-Menu Options:
-
-1 - DOOM Guy Bus Monitor Mode
-This allows you to see the interactions between the SAO and the host.
-
-2 - I2C SAO Bus Sniffer Mode
-This allows you to monitor the entire I2C bus. If a host has more than one SAO port you can see what magic bytes and data it is transmitting...
-
-3 - Serial UART Sniffer Mode
-This allows you to passively man in the middle another embedded system's serial UART line. 
-Connect the source's serial TX to the SAO RX Pin PB23.
-Connect the target's serial RX to the SAO TX Pin PB22.
-Choose the appropriate baud rate and byte translation (ASCII or DEC).
-
-4 - Custom  Application Mode
-This is the area for YOU to add your own code.
-
-### I2C Interactivity
-
 TBD
 
 ***
