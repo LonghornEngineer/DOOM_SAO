@@ -23,7 +23,7 @@ int16_t mf_rez_x = 60;
 uint8_t mem_write_address = 0x00;
 
 uint8_t eeprom[5] = {
-  0x1B, 0x05, 0x01, 0x41, 0x00
+  0x1B, 0x05, 0x01, 0x02, 0x64
 };
 
 //SAO mode 0 is Default, displays menu on serial interface
@@ -413,6 +413,9 @@ void receiveEvent(int howMany)
   {
     uint8_t x = Wire.read();                 // receive byte
     mem_write_address = x;
+    SerialUSB.print("Address is: ");
+    SerialUSB.println(x, HEX);
+    SerialUSB.println("");
   }
   // 2 Bytes Received. This is a Write to EEPROM Operation
   else if(howMany == 2)
@@ -439,12 +442,17 @@ void receiveEvent(int howMany)
 
 void requestEvent()
 {    
+    mem_write_address = Wire.read();
+    SerialUSB.println(mem_write_address,HEX);
     // Check to see if the location exists!
     if(mem_write_address < sizeof(eeprom))
     {
       if(sao_mode == 1){
         SerialUSB.print("requestEvent sending: 0x");
         SerialUSB.println(eeprom[mem_write_address], HEX);
+        SerialUSB.print("Address is: ");
+        SerialUSB.println(mem_write_address, HEX);
+        
       }
       Wire.write(eeprom[mem_write_address]);
     }
@@ -457,7 +465,5 @@ void requestEvent()
       }
       Wire.write(0x00);
     }
-
-    mem_write_address = 0x00;
     return;
 }
