@@ -188,13 +188,13 @@ void mode_4_custom_appliaction()
 void menu(){
   switch(sao_mode){
     case 0:
-      //Start message which displays in loop
+      // Start message which displays in loop
       if(menu_display_start){
         SerialUSB.println(" ");
         SerialUSB.print("Press X to Start: ");
       }
 
-      //Main menu display
+      // Main menu display
       if(menu_display_0){
         macro_splash();
         SerialUSB.println("1 - DOOM Guy  Interface Mode");
@@ -207,7 +207,7 @@ void menu(){
 
       incomingByte = SerialUSB.read();
 
-      //Parse input for 'X' or 'x' to kickoff the main menu
+      // Parse input for 'X' or 'x' to kickoff the main menu
       if(((incomingByte == 88) || (incomingByte == 120)) && (menu_display_0 == false)){
         menu_display_start = false;
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
@@ -215,22 +215,24 @@ void menu(){
         menu_display_0 = true;
       }
 
-      //If valid input 1..4 put the SAO in to that mode
+      // If valid input 1..4 put the SAO in to that mode
       if((incomingByte > 48) && (incomingByte < 53) && (menu_display_start == false)){
-        //Byte recieved is in ASCII, subtract 48 to get to the decimal value
+        // Byte recieved is in ASCII, subtract 48 to get to the decimal value
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
         sao_mode = incomingByte - 48;
         sao_god_mode_display = true;
-        if(sao_mode == 1) mode_1_dg(); //this prevents the i2c msgs from displaying before the submenu splash
+        // This prevents the i2c msgs from displaying before the submenu splash
+        if(sao_mode == 1) mode_1_dg(); 
       }
       break;
-      
-    case 1: //DOOM Guy Interface Mode
-      //No Code to add, by default this is running in the background and entering
-      //This mode just toggles the println on, quitting toggles them off
+
+    // DOOM Guy Interface Mode
+    // No Code to add, by default this is running in the background and entering
+    // This mode just toggles the println on, quitting toggles them off
+    case 1: 
       mode_1_dg();
-      //Press (Q or q) to quit back to main menu
+      // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
@@ -239,10 +241,11 @@ void menu(){
         SerialUSB.println(" \n");
       }
       break;
-    
-    case 2: //I2C Sniffer Mode
+      
+    // I2C Sniffer Mode
+    case 2: 
       mode_2_i2c_sniffer();
-      //Press (Q or q) to quit back to main menu
+      // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
@@ -250,13 +253,14 @@ void menu(){
         menu_display_2 = true;
       }
       break;
-    
-    case 3: //Serial Bus Sniffer Mode
+      
+    // Serial Bus Sniffer Mode
+    case 3: 
       mode_3_serial_sniffer();
-      //Press (Q or q) to quit back to main menu
+      // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
-        //Reset variables upon quitting
+        // Reset variables upon quitting
         sao_mode = 0;
         sao_serial_baud_selection = 0;
         sao_serial_translation_mode = 0;
@@ -288,10 +292,11 @@ void menu(){
         SerialUSB.println(" \n");
       }
       break;
-
-    case 4: //Custom Application Mode
+      
+    // Custom Application Mode
+    case 4: 
       mode_4_custom_appliaction();
-      //Press (Q or q) to quit back to main menu
+      // Press (Q or q) to quit back to main menu
       incomingByte = SerialUSB.read();
       if((incomingByte == 81) || (incomingByte == 113)){
         sao_mode = 0;
@@ -304,7 +309,8 @@ void menu(){
 
 void setup(void)
 {
-  Wire.begin(0x50);                // Join i2c bus with address #50 to simulate AT24C32 eeprom
+  // Join i2c bus with address #50 to simulate AT24C32 eeprom
+  Wire.begin(0x50);                
   Wire.onRequest(requestEvent); 
   Wire.onReceive(receiveEvent);
   
@@ -312,12 +318,14 @@ void setup(void)
 
   pinMode(GPIO1, INPUT);
   pinMode(GPIO2, INPUT);
-
-  tft.init(240, 240);             // Init ST7789 240x240
+  
+  // Init ST7789 240x240
+  tft.init(240, 240);             
   tft.setRotation(2);
 
   tft.fillScreen(ST77XX_WHITE);
-  
+
+  // That sweet MacroFab Sponsorship
   render(MF_Logo, sizeof(MF_Logo)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
   delay(500);
   tft.fillScreen(ST77XX_WHITE);
@@ -373,7 +381,7 @@ void loop()
   }
   
   // Given non default modes 1-4 imply the user is interfaced via Serial USB, they are hardware hacking.
-  // It is better to disable the animation and 10x500ms delays so they have real time control of the MCU.
+  // It is better to disable the animation and the delays so they have real time control of the MCU.
   // Appropriately just display God Mode in this case.
   // There is a boolean toggle because it wastes time to continually redraw the same image
   else
@@ -389,7 +397,7 @@ void loop()
 
 void run_sao_mode_0(uint8_t face_dir)
 {
-  //DG Happy!
+  // DG Happy!
   if(eeprom[5] == 0)
   {
     // DG Health 80 or higher
