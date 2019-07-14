@@ -121,11 +121,11 @@ void printHex(int num, int precision) {
 void mode_1_dg_interface()
 {
   if(menu_display_1){
-    SerialUSB.println("**Doom Guy Interface Mode**");
+    SerialUSB.println("\n**Doom Guy Interface Mode**");
     SerialUSB.println("Press Q to quit back to the main menu");  
     SerialUSB.println("For details visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
     SerialUSB.println("-----------------------------------------------------------------");  
-    SerialUSB.println("|EEPROM ADDRESS|   0  |   1  |   2  |   3  |   4  |   5  | 6..n |");
+    SerialUSB.println("|EEPROM ADDRESS|    0 |    1 |    2 |    3 |    4 |    5 | 6..n |");
     SerialUSB.println("-----------------------------------------------------------------");
     SerialUSB.print("|CURRENT  VALUE| ");
     for(int i = 0; i <6; i++){
@@ -322,16 +322,9 @@ void menu(){
             SerialUSB.println(inString);
           }
           
-          if((interface_addr_selection)&&(interface_value_selection)){
-            //Display update criteria
-            SerialUSB.print("Writing to EEPROM at Address(");
-            SerialUSB.print(interface_addr);
-            SerialUSB.print(") the Hex Value(0x");
-            SerialUSB.print(interface_value,HEX); 
-            SerialUSB.println(")\n");
-            
+          if((interface_addr_selection)&&(interface_value_selection)){           
             //Update the EEPROM
-            //TODO
+            write_to_eeprom(interface_addr, interface_value);
             
             //Reset Variables so the interactive menu appears again
             interface_addr_selection = false;
@@ -764,10 +757,10 @@ void render(const uint16_t pixel_array[], int16_t siz, int16_t offset_x, int16_t
 
 void write_to_eeprom(uint8_t address, uint8_t value)
 {
-  if(sao_mode == 2){
+  if((sao_mode == 1)||(sao_mode == 2)){
     SerialUSB.print("Write ");
     SerialUSB.print(value,HEX);
-    SerialUSB.print(" to location ");
+    SerialUSB.print(" hex to location ");
     SerialUSB.println(address, HEX);  
   }
 
@@ -778,7 +771,7 @@ void write_to_eeprom(uint8_t address, uint8_t value)
   }
   else
   {
-    if(sao_mode == 2){
+    if((sao_mode == 1)||(sao_mode == 2)){
       SerialUSB.print("Woah can't overwrite address: ");
       SerialUSB.println(address);
     }
