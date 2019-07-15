@@ -1,6 +1,7 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <Wire.h>
+#include "FlashStorage.h"
 #include "DG_Faces.h"
 #include "MF_Logo.h"
 
@@ -38,11 +39,18 @@ uint8_t eeprom[6] = {
   0x1B, 0x05, 0x01, 0x01, 0x64, 0x00
 };
 
-// SAO mode 0 is Default, displays menu on serial interface
-// SAO mode 1 is Doom Guy Control
-// SAO mode 2 is I2C Sniffer - over SAO I2C bus
-// SAO mode 3 is Serial Sniffer - leveraging SAMD GPIO XX for TX, GPIO XX for RX
-// SAO mode 4 is Custom Application for people to drop in their own code
+// Create a structure to store our virtual EEPROM data to internal program flash
+typedef struct {
+  bool init;        //This by default will be false and set the first time the SAO is powered up
+  bool persistance; 
+  uint8_t eeprom_3; //We don't store eeprom 0..2 because they are protected anyway
+  uint8_t eeprom_4;
+  uint8_t eeprom_5;
+} sao_data;
+//Instanciate the flash store
+FlashStorage(sao_flash_store, sao_data);
+sao_data data;
+
 uint8_t sao_mode = 0;
 uint8_t incomingByte = 0;
 uint8_t sao_serial_incoming_byte = 0;
@@ -51,6 +59,8 @@ uint8_t sao_serial_translation_mode = 0;
 bool sao_god_mode_display = false;
 bool interface_addr_selection = false;
 bool interface_value_selection = false;
+bool persistance = false;
+bool init_test = false;
 uint8_t interface_addr = 0;
 uint8_t interface_value = 0;
 int inChar = 0;
@@ -63,6 +73,7 @@ bool menu_display_3 = true;
 bool menu_display_4 = true;
 bool menu_display_4_1 = true;
 bool menu_display_5 = true;
+bool menu_display_6 = true;
 String inString = "";   
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
@@ -234,6 +245,35 @@ void mode_5_custom_appliaction()
   }
 }
 
+void mode_6_persistance()
+{
+  if(menu_display_6)
+  {
+    SerialUSB.println("**Persistance Mode**");
+    SerialUSB.println("This allows you to enable or disable the saving of your EEPROM writes to internal flash.");
+    SerialUSB.println("Ex: You change the DG health from the Interface Mode and want the new animation to persist.");
+    SerialUSB.println("DISCLAIMER: Flash memory has a limited amount of write cycles!");
+    SerialUSB.println("Typical flash memory can perform about 10000 writes cycles to the same block.");
+    SerialUSB.println("Then it will wear out and begin to lose it's ability to retain data.");
+    SerialUSB.println("You may think, you are just changing the health value a few times and it's no big deal.");
+    SerialUSB.println("What if you write your own custom application to enumerate SAO id's to look for unlocks?");
+    SerialUSB.println("We reccomend you only enable persistance when you REQUIRE changes being written to EEPROM.");
+    SerialUSB.println("Then disable it once you are done.\n");
+
+    if(persistance) SerialUSB.println("Persistance is currently: ENABLED\n");
+    else SerialUSB.println("Persistance is currently: DISABLED\n");
+
+    //This should only display the very first time after a firmware flash. Once power cycled it should never print.
+    if(init_test)SerialUSB.println("The SAO Flash was initialized when the badge turned on.\n");
+
+    SerialUSB.println("Press Q : Quit Back to the Main Menu");  
+    SerialUSB.println("Press 1 : DISABLE Persistance (default)"); 
+    SerialUSB.println("Press 2 : ENABLE Persistance"); 
+    SerialUSB.println("Please enter a selection: "); 
+    menu_display_6 = false; //this prevents infinite printing of the menu in loop   
+  }
+}
+
 void menu(){
   //The purpose of the menu function is to externally call the sub-menu displays
   //Then within each case statement the processing logic for that menu is contained
@@ -253,7 +293,8 @@ void menu(){
         SerialUSB.println("3 - I2C SAO  Bus Sniffer Mode");
         SerialUSB.println("4 - Serial UART  Sniffer Mode");
         SerialUSB.println("5 - Custom  Application  Mode");
-        SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5: ");  
+        SerialUSB.println("6 - EEPROM  Persistance  Mode");
+        SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5, 6: ");  
         menu_display_0 = false; //this prevents infinite printing of the menu in loop   
       }
 
@@ -268,7 +309,7 @@ void menu(){
       }
 
       // If valid input 1..5 put the SAO in to that mode
-      if((incomingByte > 48) && (incomingByte <= 53) && (menu_display_start == false)){
+      if((incomingByte > 48) && (incomingByte <= 54) && (menu_display_start == false)){
         // Byte recieved is in ASCII, subtract 48 to get to the decimal value
         SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
         SerialUSB.println(" \n");
@@ -416,11 +457,45 @@ void menu(){
         menu_display_5 = true;
       }
       break;
+
+    // EEPROM Persistance Mode
+    case 6: 
+      mode_6_persistance();
+      // Press (Q or q) to quit back to main menu
+      incomingByte = SerialUSB.read();
+      if((incomingByte == 81) || (incomingByte == 113)){
+        sao_mode = 0;
+        menu_display_0 = true;
+        menu_display_6 = true;
+      }
+
+      //Persistance Selection
+      if((incomingByte > 48) && (incomingByte < 51)){
+        if(incomingByte == 49){//Disable Persisance
+          if(persistance){//Only change it if it's different, so here its currently TRUE and they want it FALSE
+            data.persistance = false;
+            sao_flash_store.write(data);
+            persistance = false;
+          }
+        }
+        else{//Enable Persistance
+          if(!persistance){//Only change it if it's different, so here its currently FALSE and they want it TRUE
+            data.persistance = true;
+            sao_flash_store.write(data);
+            persistance = true;
+          }
+        }
+        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        SerialUSB.println(" \n");
+        menu_display_6 = true;
+        break;
+      }
+      break;
   }
 }
 
 void setup(void)
-{
+{  
   // Join i2c bus with address #50 to simulate AT24C32 eeprom
   Wire.begin(0x50);                
   Wire.onRequest(requestEvent); 
@@ -441,6 +516,25 @@ void setup(void)
   render(MF_Logo, sizeof(MF_Logo)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
   delay(500);
   tft.fillScreen(ST77XX_WHITE);
+
+  //Load stored data
+  data = sao_flash_store.read();
+  if(!data.init){ //First time the SAO is ever ran the storage must be initialized
+    data.eeprom_3 = eeprom[3];
+    data.eeprom_4 = eeprom[4];
+    data.eeprom_5 = eeprom[5];
+    data.persistance = false;
+    data.init = true;
+    init_test = true;
+    sao_flash_store.write(data);
+    SerialUSB.println("Saving first time initialization data to flash");//This will only display one time
+  }
+  else{ //Read the persisted storage in to the virtual EEPROM
+    eeprom[3] = data.eeprom_3;
+    eeprom[4] = data.eeprom_4;
+    eeprom[5] = data.eeprom_5;
+    persistance = data.persistance;
+  }
 }
 
 void loop()
@@ -767,6 +861,29 @@ void write_to_eeprom(uint8_t address, uint8_t value)
   // Make sure address is not in the protected area!
   if(address >= 0x02)
   {
+    //Writes to flash only persist if enabled AND it's different
+    if(persistance){
+      if((address == 3) && (value != eeprom[address])){
+        data.eeprom_3 = value;  
+        sao_flash_store.write(data);
+        SerialUSB.println("Persistance Enabled - Saving Update to Flash...");
+      } 
+      else if((address == 3) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");}
+      
+      else if((address == 4) && (value != eeprom[address])){
+        data.eeprom_4 = value;
+        sao_flash_store.write(data);  
+        SerialUSB.println("Persistance Enabled - Saving Update to Flash...");
+      }
+      else if((address == 4) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");} 
+         
+      else if((address == 5) && (value != eeprom[address])){
+        data.eeprom_5 = value;
+        sao_flash_store.write(data);  
+        SerialUSB.println("Persistance Enabled - Saving Update to Flash...");
+      }
+      else if((address == 5) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");}      
+    }
     eeprom[address] = value;
   }
   else
