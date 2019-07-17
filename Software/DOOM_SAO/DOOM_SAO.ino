@@ -12,6 +12,15 @@
 #define GPIO2          5
 #define SAOSERIAL      Serial 
 
+#define SAMPLE            (REG_PORT_IN0 & (PORT_PA22 | PORT_PA23))
+#define START1            (PORT_PA22 | PORT_PA23)
+#define START2             PORT_PA23
+
+#define BUFFSIZE          5000
+#define TIMEOUT           1000
+
+uint32_t buffer[BUFFSIZE];
+
 int16_t dg_offset_x = 16;
 int16_t dg_offset_y = 0;
 int16_t dg_pixel_size = 8;
@@ -259,6 +268,12 @@ void mode_2_dg_sniffer()
   }
 }
 
+//////////////////////////
+// i2c sniffer based off the code by rricharz
+// https://github.com/rricharz/i2c-sniffer-100kBaud-Arduino-Mega
+// Rene Richarz if you are out there. I will buy you all the beer! @Cr4bf04m
+//////////////////////////
+
 void mode_3_i2c_sniffer()
 {
   // TODO
@@ -277,6 +292,9 @@ void mode_3_i2c_sniffer()
     menu_display_0 = true;
     menu_display_3 = true;
   }
+
+  int points = acquire_data();
+  display_data(points);
 }
 
 void mode_4_serial_sniffer()
@@ -978,4 +996,129 @@ void requestEvent()
       Wire.write(0x00);
     }
     return;
+}
+
+void printHexByte(int b)
+{
+  SerialUSB.print((b >> 4) & 0xF, HEX);
+  SerialUSB.print(b & 0xF, HEX);
+}
+
+int acquire_data()
+{
+  unsigned long endtime;
+  unsigned long data,lastData;
+
+  SerialUSB.println("Acquiring data");
+
+  bool start = false;
+  while (!start) 
+  {
+    while ((lastData = SAMPLE) != START1);          // wait until state is START1
+    while ((data = SAMPLE) == lastData);            // wait until state change
+    start = (data == START2);                       // start condtion met if new state is START2
+  }
+
+  endtime = millis() + TIMEOUT;
+  lastData = START2;
+  int k = 0;
+  buffer[k++] = START1;
+  buffer[k++] = START2;
+  do 
+  {
+    while ((data = SAMPLE) == lastData);           // wait until data has changed
+    buffer[k++] = lastData = data;
+  }
+  while ((k < BUFFSIZE) && (millis() < endtime));
+
+  for(int i = 0; i < BUFFSIZE; i++)
+  {
+    buffer[i] = ((buffer[i] & PORT_PA22) >> 15) | ((buffer[i] & PORT_PA23) >> 17);
+  }
+  return k;
+}
+
+int gbuffer(int i)
+{
+    return (buffer[i] >> 6) & 0x3;
+}
+
+int findNextStartCondition(int k)
+{
+  while((k < BUFFSIZE- 1) && ((gbuffer(k - 1) != 3) || (gbuffer(k) != 1)))
+    k++;
+  return k;
+}
+
+void display_data(int points)
+{
+  int lastData, data, k, Bit, Byte, i, state,nextStart;
+  long starttime;
+
+  #define ADDRESS  0     
+
+  starttime = millis();
+
+  SerialUSB.print("Analyzing data, number of transitions = "); SerialUSB.println(points);
+  SerialUSB.println("I2C response activity: * = NAK . = ACK");
+  SerialUSB.println("Everything is in HEX");
+  // ignore start transition
+  k = 3;              
+  i = 0;
+  Byte = 0;
+  state = ADDRESS;
+  nextStart = findNextStartCondition(k);
+  do {
+    data = gbuffer(k++);
+    if (data & 1) {
+      Bit = (data & 2) > 0;
+      Byte = (Byte << 1) + Bit;
+      if (i++ >= 8) {
+        if (state == ADDRESS) {
+          SerialUSB.print("Dev=");
+          printHexByte(Byte / 4);
+          if (Byte & 2)
+            SerialUSB.print(" R");
+          else
+            SerialUSB.print(" W");
+          if (Byte & 1)
+            SerialUSB.print("*");
+          else
+            SerialUSB.print(".");
+          state++;
+        }       
+        else if (state == 1) {
+          SerialUSB.print("Data=");
+          printHexByte(Byte / 2);
+          if (Byte & 1)
+            SerialUSB.print("*");
+          else
+            SerialUSB.print(".");
+          state++;
+          //k--;                      // why ??? <- this was the original comment for this line. This caused the data to be read off one byte. IE 0x16 would be read as 0x0B. Hint found here. https://github.com/rricharz/i2c-sniffer-100kBaud-Arduino-Mega/issues/3
+        }
+        else {
+          printHexByte(Byte / 2);
+          if (Byte & 1)
+            SerialUSB.print("*");
+          else
+            SerialUSB.print(".");
+        }
+        if (nextStart - k < 9) {
+          SerialUSB.println();
+          k = nextStart + 1;
+          nextStart = findNextStartCondition(k);
+          state = ADDRESS;
+        }
+        i = 0;
+        Byte = 0;
+      }
+    }
+  }
+  while (k < points);
+  SerialUSB.println("");
+  SerialUSB.print("Time to analyze and display data was ");
+  SerialUSB.print(millis() - starttime);
+  SerialUSB.println(" msec");
+  SerialUSB.println();
 }
