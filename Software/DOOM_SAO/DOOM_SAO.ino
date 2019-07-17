@@ -279,7 +279,7 @@ void mode_3_i2c_sniffer()
   // TODO
   if(menu_display_3){
     SerialUSB.println("**I2C SAO Bus Sniffer**");
-    SerialUSB.println("No Code Yet?!");
+    SerialUSB.println("Based off code by rricharz");
     SerialUSB.print("Press Q to quit back to the main menu: ");  
     menu_display_3 = false; //this prevents infinite printing of the menu in loop   
   }
