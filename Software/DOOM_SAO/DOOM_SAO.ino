@@ -98,7 +98,7 @@ void macro_splash()
   SerialUSB.println(" ");
   SerialUSB.println("***********************************************************");
   SerialUSB.println(" ");
-  SerialUSB.println("    DC27 Doom SAO - SAMD21 Arduino Compatible Dev Board");
+  SerialUSB.println("    DC27 DOOM SAO - SAMD21 Arduino Compatible Dev Board");
   SerialUSB.println(" ");
   SerialUSB.println("                         ▓▓▓▓▓▓▓▓▓                         ");
   SerialUSB.println("                       ▓▓▓▓▓▓▓▓▓▓▓▓▓                       ");
@@ -152,7 +152,7 @@ void printHex(int num, int precision) {
 void mode_1_dg_interface()
 {
   if(menu_display_1){
-    SerialUSB.println("\n**Doom Guy Interface Mode**");
+    SerialUSB.println("\n**DOOM Guy Interface Mode**");
     SerialUSB.println("Press Q to quit back to the main menu");  
     SerialUSB.println("For details visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
     SerialUSB.println("-----------------------------------------------------------------");  
@@ -254,7 +254,7 @@ void mode_1_dg_interface()
 void mode_2_dg_sniffer()
 {
   if(menu_display_2){
-    SerialUSB.println("**Doom Guy Bus Sniffer Mode**");
+    SerialUSB.println("**DOOM Guy Bus Sniffer Mode**");
     SerialUSB.println("Press Q to quit back to the main menu.\n");  
     menu_display_2 = false; //this prevents infinite printing of the menu in loop   
   }
