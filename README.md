@@ -19,7 +19,7 @@ The DOOM Shitty Add On (DOOM SAO) is an add on for conference badges that implem
 
 Connection Settings: 9600/8/N/1
 
-Ensure your terminal terminates with Carrige Return (The Arduino Serial Monitor defaults to New Line. This is wrong)
+Ensure your terminal terminates with Carriage Return (The Arduino Serial Monitor defaults to New Line. This is wrong)
 
 Press 'X' to start the interactive menu.
 
