@@ -4,6 +4,8 @@
 
 The DOOM Shitty Add On (DOOM SAO) is an add on for conference badges that implement the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/) for SAO devices. Additionally, it has provisions to be a full on development platform for the ATSAMD21G18A microcontroller. The MCU and preinstalled bootloader are also Arduino compatible to aid in the ease of hardware and firmware hacking. This document will explain the feature set and how to interface with the DOOM SAO to bring out its full potential.
 
+![Doom SAO](Doomder.gif)
+
 ## Full Feature Set
 * Arduino Compatible MCU ATSAMD21G18A
 * All unused I/O from the MCU is accessible
@@ -85,7 +87,7 @@ Reading data locations that do not exist will return with data 0x00.
 
 ### What is Auto Mode?
 
-When first booted up, DOOM SAO defaults to an auto mode. In this mode, Doom Guy looks left and right in an alternating manner with no control from the Badge. Writing a 0x00 value to this address diables auto mode and allows the GPIO to control DOOM Guy. With auto mode disabled, GPIO 1 makes DOOM Guy look left and GPIO 2 makes DOOM Guy look right. Truth table below.
+When first booted up, DOOM SAO defaults to an auto mode. In this mode, Doom Guy looks left and right in an alternating manner with no control from the Badge. Writing a 0x00 value to this address disables auto mode and allows the GPIO to control DOOM Guy. With auto mode disabled, GPIO 1 makes DOOM Guy look left and GPIO 2 makes DOOM Guy look right. Truth table below.
 
 | GPIO 1	| GPIO 2	| What Happens?			|
 |:-:		|:-:		|:-:					|
@@ -95,6 +97,12 @@ When first booted up, DOOM SAO defaults to an auto mode. In this mode, Doom Guy 
 | 1			| 1			| DG Looks Backwards	|
 
 ### What is Health?
+
+The more "damage" Doom Guy takes the more beat up he becomes. Writing a value under 0x64 (100HP) will make Doom Guy look more bloody like he has been punched by a couple of demons. 
+
+### What is Anger?
+
+When Doom Guy gets pissed he gets pissed. Writing a 0x01 value to this location will seriously piss Doom Guy off. This must be his special spot. 
 
 ***
 **License Information**
