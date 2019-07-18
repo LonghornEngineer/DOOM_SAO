@@ -32,10 +32,10 @@ Menu Options:
 1 - DOOM Guy Interface Mode
 This allows you to modify the EEPROM directly to dynamically control the animations and SAO behavior.
 
-2 - DOOM Guy Bus Monitor Mode
+2 - DOOM Guy Bus Sniffer Mode
 This is a filtered view of the DOOM Guy's I2C traffic. It's a poor man's logic analyzer, decoded for SAO interpretation.
 
-3 - I2C SAO Bus Sniffer Mode
+3 - I2C Bus Sniffer Mode
 This allows you to monitor the entire I2C bus. If a host has more than one SAO port you can see what magic bytes and data other SAO's are transmitting in addtion to what the badge is using on I2C. It's a poor man's logic analyzer, decoded in general, for seeing I2C NACK, ACK, Reads, and Writes.
 
 4 - Serial UART Sniffer Mode
