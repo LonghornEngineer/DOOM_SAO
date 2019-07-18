@@ -43,10 +43,6 @@ Save the file
 
 The DOOM_SAO.ino file should compile correctly in the Arduino IDE now. 
 
-## Overview of the Firmware
-
-TBD
-
 ***
 
 **License Information**
