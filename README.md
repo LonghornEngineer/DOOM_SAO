@@ -76,6 +76,7 @@ First 3 addresses are protected and can not be overwritten unless you change the
 | 0x02		| SAO ID	| 0x01			| Yes			|
 | 0x03		| AutoMode	| 0x01			| No			|
 | 0x04		| Health	| 0x64			| No			|
+| 0x05		| Anger	| 0x00			| No			|
 
 ### EEPROM functionality (quirks to note) 
 
