@@ -1,5 +1,41 @@
-#include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
+/*****************************************************************************
+ * Made with beer and late nights in California and Texas.
+ *
+ * (C) Copyright 2017-2019 AND!XOR LLC (https://andnxor.com/).
+ *
+ * PROPRIETARY AND CONFIDENTIAL UNTIL AUGUST 11th, 2019 then,
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ADDITIONALLY:
+ * If you find this source code useful in anyway, use it in another electronic
+ * conference badge, or just think it's neat. Consider buying us a beer
+ * (or two) and/or a badge (or two). We are just as obsessed with collecting
+ * badges as we are in making them.
+ *
+ * Contributors:
+ *  @Cr4bf04m
+ *  @andnxor
+ *  @zappbrandnxor
+ *  @hyr0n1
+ *  @bender_andnxor
+ *  @lacosteaef
+ *  @f4nci3
+ ****************************************************************************
+ */
+ 
+#include <Adafruit_GFX.h>   
+#include <Adafruit_ST7789.h> 
 #include <Wire.h>
 #include "FlashStorage.h"
 #include "DG_Faces.h"
@@ -44,20 +80,26 @@ uint8_t mem_write_address_valid = 0x00;
 //  0x03    | AutoMode
 //  0x04    | Health
 //  0x05    | Anger
-uint8_t eeprom[6] = {
+uint8_t eeprom[6] = 
+{
   0x1B, 0x05, 0x01, 0x01, 0x64, 0x00
 };
 
 // Create a structure to store our virtual EEPROM data to internal program flash
-typedef struct {
-  bool init;        //This by default will be false and set the first time the SAO is powered up
-  bool m6_persistance; 
-  uint8_t eeprom_3; //We don't store eeprom 0..2 because they are protected anyway
+typedef struct
+{
+  // This by default will be false and set the first time the SAO is powered up
+  bool init;        
+  bool m6_persistence; 
+  // We don't store eeprom 0..2 because they are protected anyway
+  uint8_t eeprom_3; 
   uint8_t eeprom_4;
   uint8_t eeprom_5;
 } sao_data;
 
-//Instanciate the flash store
+long previous_write_time = 0;
+
+// Instanciate the flash store
 FlashStorage(sao_flash_store, sao_data);
 sao_data data;
 
@@ -80,6 +122,7 @@ uint8_t m1_interface_addr = 0;
 uint8_t m1_interface_value = 0;
 int m1_char_count = 0;
 int m1_inChar = 0;
+int m1_inconspicuous_variable = 0;
 bool m1_interface_addr_selection = false;
 bool m1_interface_value_selection = false;
 String m1_inString = ""; 
@@ -88,8 +131,8 @@ bool m4_hw_baud_selection = false;
 uint8_t m4_hw_translation_mode = 0;
 uint8_t m4_hw_incoming_byte = 0;
 
-bool m6_persistance = false;
-bool m6_persistance_init_test = false;
+bool m6_persistence = false;
+bool m6_persistence_init_test = false;
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
@@ -135,23 +178,27 @@ void macro_splash()
   SerialUSB.flush();
 }
 
-void persist_eeprom(){
-  //TODO Add a timer to batch eeprom writes once every 10 seconds
+void persist_eeprom()
+{
   sao_flash_store.write(data);
+  return;
 }
 
-void printHex(int num, int precision) {
-  //This function converts integers to hex for pretty printing  
+// This function converts integers to hex for pretty printing  
+void printHex(int num, int precision)
+{
   char tmp[16];
   char format[128];
   sprintf(format, "0x%%.%dX", precision);
   sprintf(tmp, format, num);
   SerialUSB.print(tmp);
+  return;
 }
 
 void mode_1_dg_interface()
 {
-  if(menu_display_1){
+  if(menu_display_1)
+  {
     SerialUSB.println("\n**DOOM Guy Interface Mode**");
     SerialUSB.println("Press Q to quit back to the main menu");  
     SerialUSB.println("For details visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
@@ -182,17 +229,21 @@ void mode_1_dg_interface()
     menu_display_1_1 = false;
   }
 
-  //Clear the Buffers
-  if(m1_inString[m1_char_count] == '\r'){
+  // Clear the Buffers
+  if(m1_inString[m1_char_count] == '\r')
+  {
     m1_inString = ""; // clear the buffer for new input if they hit return
     m1_char_count = 0;
   }
 
-  //This parses the input for ASCII numbers, charachters will be ignored (except Q or q for Quit)
-  while (SerialUSB.available() > 0) {
+  // This parses the input for ASCII numbers, charachters will be ignored (except Q or q for Quit)
+  while (SerialUSB.available() > 0)
+  {
     m1_inChar = SerialUSB.read();
-    if (isAlpha(m1_inChar)){
-      if(((char)m1_inChar == 'q') || ((char)m1_inChar == 'Q')){
+    if (isAlpha(m1_inChar))
+    {
+      if(((char)m1_inChar == 'q') || ((char)m1_inChar == 'Q'))
+      {
         // Press (Q or q) to quit back to main menu
         SerialUSB.print((char)m1_inChar); //echo user selection to the USB terminal
         SerialUSB.println(" \n"); 
@@ -204,16 +255,19 @@ void mode_1_dg_interface()
       }
     }
     
-    if (isDigit(m1_inChar)) {
+    if (isDigit(m1_inChar))
+    {
       // convert the incoming byte to a char and add it to the string if it happens to be a digit
       m1_inString += (char)m1_inChar;
       m1_char_count++;
     }
     
-    if ((m1_inChar == '\r') && (m1_inString.length() > 0)) {
+    if ((m1_inChar == '\r') && (m1_inString.length() > 0))
+    {
       // if you get a carrige return, parse the input
-      if(!m1_interface_addr_selection){
-        //Assign the address
+      if(!m1_interface_addr_selection)
+      {
+        // Assign the address
         if(m1_inString.toInt() <= 255)
           m1_interface_addr = m1_inString.toInt();
         else
@@ -223,44 +277,49 @@ void mode_1_dg_interface()
         //Echo User Input to the Terminal
         SerialUSB.println(m1_inString);
       }
-      else if((m1_interface_addr_selection)&&(!m1_interface_value_selection)){
-        //Assign the value
+      else if((m1_interface_addr_selection)&&(!m1_interface_value_selection))
+      {
+        // Assign the value
         if(m1_inString.toInt() <= 255)
           m1_interface_value = m1_inString.toInt();
         else
           m1_interface_value = 255;
         m1_interface_value_selection = true;
-        //Echo User Input to the Terminal
+        // Echo User Input to the Terminal
         SerialUSB.println(m1_inString);
       }
       
-      if((m1_interface_addr_selection)&&(m1_interface_value_selection)){           
-        //Update the EEPROM
+      if((m1_interface_addr_selection)&&(m1_interface_value_selection))
+      {           
+        // Update the EEPROM
         write_to_eeprom(m1_interface_addr, m1_interface_value);
         
-        //Reset Variables so the interactive menu appears again
+        // Reset Variables so the interactive menu appears again
         m1_interface_addr_selection = false;
         m1_interface_value_selection = false;
         menu_display_1 = true;
         menu_display_1_1 = true;
         m1_char_count = 0;
       }
-      m1_inString = ""; // clear the buffer for new input
+      // clear the buffer for new input
+      m1_inString = ""; 
     }
-  }   
-  
+  }    
 }
 
 void mode_2_dg_sniffer()
 {
-  if(menu_display_2){
+  if(menu_display_2)
+  {
     SerialUSB.println("**DOOM Guy Bus Sniffer Mode**");
     SerialUSB.println("Press Q to quit back to the main menu.\n");  
-    menu_display_2 = false; //this prevents infinite printing of the menu in loop   
+    // this prevents infinite printing of the menu in loop 
+    menu_display_2 = false;   
   }
   // Press (Q or q) to quit back to main menu
   incomingByte = SerialUSB.read();
-  if((incomingByte == 'q') || (incomingByte == 'Q')){
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
     sao_mode = 0;
     menu_display_0 = true;
     menu_display_2 = true;
@@ -276,23 +335,25 @@ void mode_2_dg_sniffer()
 
 void mode_3_i2c_sniffer()
 {
-  // TODO
-  if(menu_display_3){
+  if(menu_display_3)
+  {
     SerialUSB.println("**I2C SAO Bus Sniffer**");
     SerialUSB.println("Based off code by rricharz");
     SerialUSB.print("Press Q to quit back to the main menu: ");  
-    menu_display_3 = false; //this prevents infinite printing of the menu in loop   
+    // this prevents infinite printing of the menu in loop   
+    menu_display_3 = false; 
   }
   // Press (Q or q) to quit back to main menu
   incomingByte = SerialUSB.read();
-  if((incomingByte == 'q') || (incomingByte == 'Q')){
-    SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
+    // echo user selection to the USB terminal
+    SerialUSB.print((char)incomingByte); 
     SerialUSB.println(" \n");
     sao_mode = 0;
     menu_display_0 = true;
     menu_display_3 = true;
   }
-
   int points = acquire_data();
   display_data(points);
 }
@@ -347,7 +408,8 @@ void mode_4_serial_sniffer()
 
   // Press (Q or q) to quit back to main menu
   incomingByte = SerialUSB.read();
-  if((incomingByte == 'q') || (incomingByte == 'Q')){
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
     // Reset variables upon quitting
     sao_mode = 0;
     m4_hw_baud_selection = 0;
@@ -357,8 +419,10 @@ void mode_4_serial_sniffer()
     menu_display_4 = true;
     menu_display_4_1 = true;
   }
-  if((incomingByte >= '1') && (incomingByte <= '5') && (m4_hw_baud_selection == false)){
-    switch(incomingByte){
+  if((incomingByte >= '1') && (incomingByte <= '5') && (m4_hw_baud_selection == false))
+  {
+    switch(incomingByte)
+    {
       case '1' : SAOSERIAL.begin(9600);   m4_hw_baud_selection = true; break;
       case '2' : SAOSERIAL.begin(19200);  m4_hw_baud_selection = true; break; 
       case '3' : SAOSERIAL.begin(38400);  m4_hw_baud_selection = true; break; 
@@ -368,12 +432,19 @@ void mode_4_serial_sniffer()
     SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
     SerialUSB.println(" \n");
   }
-  else if(((incomingByte == '1') || (incomingByte == '2')) && (m4_hw_baud_selection == true) && (m4_hw_translation_mode == 0)) {
-    switch((char)incomingByte){
-      case '1': m4_hw_translation_mode = 1; break;
-      case '2': m4_hw_translation_mode = 2; break;       
+  else if(((incomingByte == '1') || (incomingByte == '2')) && (m4_hw_baud_selection == true) && (m4_hw_translation_mode == 0))
+  {
+    switch((char)incomingByte)
+    {
+      case '1':
+        m4_hw_translation_mode = 1;
+        break;
+      case '2':
+        m4_hw_translation_mode = 2;
+        break;       
     }
-    SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+    // echo user selection to the USB terminal
+    SerialUSB.print((char)incomingByte); 
     SerialUSB.println(" \n");
     SerialUSB.print("SERIAL SNIFFER ACTIVE... \n");
     SerialUSB.println(" \n");
@@ -389,12 +460,15 @@ void mode_5_custom_appliaction()
     SerialUSB.println("No custom code added yet. How sad.");
     SerialUSB.println("To get started visit ~ https://github.com/LonghornEngineer/DOOM_SAO");
     SerialUSB.print("Press Q to quit back to the main menu: ");  
-    menu_display_5 = false; //this prevents infinite printing of the menu in loop   
+    // this prevents infinite printing of the menu in loop   
+    menu_display_5 = false; 
   }
   // Press (Q or q) to quit back to main menu
   incomingByte = SerialUSB.read();
-  if((incomingByte == 'q') || (incomingByte == 'Q')){
-    SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
+    // echo user selection to the USB terminal
+    SerialUSB.print((char)incomingByte); 
     SerialUSB.println(" \n");
     sao_mode = 0;
     menu_display_0 = true;
@@ -402,11 +476,11 @@ void mode_5_custom_appliaction()
   }
 }
 
-void mode_6_persistance()
+void mode_6_persistence()
 {
   if(menu_display_6)
   {
-    SerialUSB.println("**Persistance Mode**");
+    SerialUSB.println("**Persistence Mode**");
     SerialUSB.println("This allows you to enable or disable the saving of your EEPROM writes to internal flash.");
     SerialUSB.println("Ex: You change the DG health from the Interface Mode and want the new animation to persist.");
     SerialUSB.println("DISCLAIMER: Flash memory has a limited amount of write cycles!");
@@ -414,95 +488,121 @@ void mode_6_persistance()
     SerialUSB.println("Then it will wear out and begin to lose it's ability to retain data.");
     SerialUSB.println("You may think, you are just changing the health value a few times and it's no big deal.");
     SerialUSB.println("What if you write your own custom application to enumerate SAO id's to look for unlocks?");
-    SerialUSB.println("We reccomend you only enable persistance when you REQUIRE changes being written to EEPROM.");
+    SerialUSB.println("We reccomend you only enable persistence when you REQUIRE changes being written to EEPROM.");
     SerialUSB.println("Then disable it once you are done.\n");
 
-    if(m6_persistance) SerialUSB.println("Persistance is currently: ENABLED\n");
-    else SerialUSB.println("Persistance is currently: DISABLED\n");
+    if(m6_persistence) SerialUSB.println("Persistence is currently: ENABLED\n");
+    else SerialUSB.println("Persistence is currently: DISABLED\n");
 
     //This should only display the very first time after a firmware flash. Once power cycled it should never print.
-    if(m6_persistance_init_test)SerialUSB.println("The SAO Flash was initialized when the badge turned on.\n");
+    if(m6_persistence_init_test)SerialUSB.println("The SAO Flash was initialized when the badge turned on.\n");
 
     SerialUSB.println("Press Q : Quit Back to the Main Menu");  
-    SerialUSB.println("Press 1 : DISABLE Persistance (default)"); 
-    SerialUSB.println("Press 2 : ENABLE Persistance"); 
+    SerialUSB.println("Press 1 : DISABLE Persistence (default)"); 
+    SerialUSB.println("Press 2 : ENABLE Persistence"); 
     SerialUSB.print("Please enter a selection: "); 
     menu_display_6 = false; //this prevents infinite printing of the menu in loop   
   }
 
   // Press (Q or q) to quit back to main menu
   incomingByte = SerialUSB.read();
-  if((incomingByte == 'q') || (incomingByte == 'Q')){
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
     sao_mode = 0;
     menu_display_0 = true;
     menu_display_6 = true;
   }
 
-  //m6_persistance Selection
+  // m6_persistence Selection
   if((incomingByte == '1') || (incomingByte == '2')){
     if(incomingByte == '1'){//Disable Persisance
-      if(m6_persistance){//Only change it if it's different, so here its currently TRUE and they want it FALSE
-        data.m6_persistance = false;
+      if(m6_persistence)
+      {
+        // Only change it if it's different, so here its currently TRUE and they want it FALSE
+        data.m6_persistence = false;
         persist_eeprom();
-        m6_persistance = false;
+        m6_persistence = false;
       }
     }
-    else{//Enable m6_persistance
-      if(!m6_persistance){//Only change it if it's different, so here its currently FALSE and they want it TRUE
-        data.m6_persistance = true;
+    else
+    {
+      // Enable m6_persistence
+      // Only change it if it's different, so here its currently FALSE and they want it TRUE
+      if(!m6_persistence){
+        data.m6_persistence = true;
         persist_eeprom();
-        m6_persistance = true;
+        m6_persistence = true;
       }
     }
-    SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+    // echo user selection to the USB terminal
+    SerialUSB.print((char)incomingByte); 
     SerialUSB.println(" \n");
     menu_display_6 = true;
-    //break;
   }
 }
 
-void menu(){
-  //The purpose of the menu function is to externally call the sub-menu displays
-  //Then within each case statement the processing logic for that menu is contained
-  switch(sao_mode){
+void menu()
+{
+  // The purpose of the menu function is to externally call the sub-menu displays
+  // Then within each case statement the processing logic for that menu is contained
+  switch(sao_mode)
+  {
     case 0:
       // Start message which displays in loop
-      if(menu_display_start){
+      if(menu_display_start)
+      {
         SerialUSB.println(" ");
         SerialUSB.print("Press X to Start: ");
       }
 
       // Main menu display
-      if(menu_display_0){
+      if(menu_display_0)
+      {
         macro_splash();
         SerialUSB.println("1 - DOOM Guy   Interface Mode");
         SerialUSB.println("2 - DOOM Guy Bus Sniffer Mode");
         SerialUSB.println("3 - I2C SAO  Bus Sniffer Mode");
         SerialUSB.println("4 - Serial UART  Sniffer Mode");
         SerialUSB.println("5 - Custom  Application  Mode");
-        SerialUSB.println("6 - EEPROM  Persistance  Mode");
+        SerialUSB.println("6 - EEPROM  Persistence  Mode");
         SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5, 6: ");  
-        menu_display_0 = false; //this prevents infinite printing of the menu in loop   
+        // this prevents infinite printing of the menu in loop   
+        menu_display_0 = false;
       }
 
       incomingByte = SerialUSB.read();
 
       // Parse input for 'X' or 'x' to kickoff the main menu
-      if(((incomingByte == 'x') || (incomingByte == 'X')) && (menu_display_0 == false)){
+      if(((incomingByte == 'x') || (incomingByte == 'X')) && (menu_display_0 == false))
+      {
         menu_display_start = false;
-        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+        // echo user selection to the USB terminal
+        SerialUSB.print((char)incomingByte);
         SerialUSB.println(" \n");
         menu_display_0 = true;
       }
 
       // If valid input 1..5 put the SAO in to that mode
-      if((incomingByte >= '1') && (incomingByte <= '6') && (menu_display_start == false)){
-        SerialUSB.print((char)incomingByte); //echo user selection to the USB terminal
+      if((incomingByte >= '1') && (incomingByte <= '6') && (menu_display_start == false))
+      {
+        // echo user selection to the USB terminal
+        SerialUSB.print((char)incomingByte); 
         SerialUSB.println(" \n");
-        sao_mode = incomingByte - 48; // Byte recieved is in ASCII, subtract 48 to get to the decimal value
-        while(Serial.available() > 0) incomingByte = Serial.read(); //empty the buffer
-        if(sao_mode > 1) sao_god_mode_display = true; //We want the face draws during interactive menu (option 1)
-        if(sao_mode == 2) mode_2_dg_sniffer(); // This prevents the i2c msgs from displaying before the submenu splash
+        // Byte recieved is in ASCII, subtract 48 to get to the decimal value
+        sao_mode = incomingByte - 48; 
+        // empty the buffer
+        while(Serial.available() > 0) incomingByte = Serial.read(); 
+        //We want the face draws during interactive menu (option 1)
+        if(sao_mode > 1) 
+        {
+          sao_god_mode_display = true; 
+        }
+        
+        // This prevents the i2c msgs from displaying before the submenu splash
+        if(sao_mode == 2)
+        {
+          mode_2_dg_sniffer(); 
+        }
       }
       break;
 
@@ -521,8 +621,8 @@ void menu(){
     // Mode 5 - Custom Application Mode
     case 5: mode_5_custom_appliaction(); break;
 
-    // Mode 6 - EEPROM Persistance Mode
-    case 6: mode_6_persistance(); break;
+    // Mode 6 - EEPROM Persistence Mode
+    case 6: mode_6_persistence(); break;
   }
 }
 
@@ -549,23 +649,28 @@ void setup(void)
   delay(500);
   tft.fillScreen(ST77XX_WHITE);
 
-  //Load stored data
+  // Load stored data
   data = sao_flash_store.read();
-  if(!data.init){ //First time the SAO is ever ran the storage must be initialized
+  // First time the SAO is ever ran the storage must be initialized
+  if(!data.init)
+  { 
     data.eeprom_3 = eeprom[3];
     data.eeprom_4 = eeprom[4];
     data.eeprom_5 = eeprom[5];
-    data.m6_persistance = false;
+    data.m6_persistence = false;
     data.init = true;
-    m6_persistance_init_test = true;
+    m6_persistence_init_test = true;
     persist_eeprom();
-    SerialUSB.println("Saving first time initialization data to flash");//This will only display one time, post flash
+    // This will only display one time, post flash
+    SerialUSB.println("Saving first time initialization data to flash");
   }
-  else{ //Read the persisted storage in to the virtual EEPROM
+  // Read the persisted storage in to the virtual EEPROM
+  else
+  { 
     eeprom[3] = data.eeprom_3;
     eeprom[4] = data.eeprom_4;
     eeprom[5] = data.eeprom_5;
-    m6_persistance = data.m6_persistance;
+    m6_persistence = data.m6_persistence;
   }
 }
 
@@ -637,8 +742,50 @@ void run_sao_mode_0(uint8_t face_dir)
   // DG Happy!
   if(eeprom[5] == 0)
   {
-    // DG Health 80 or higher
-    if(eeprom[4] >= 0x50)
+    if(m1_inconspicuous_variable == 1)
+    {
+      if(face_dir == 0)
+      {
+        render(bender_FullHP_left, sizeof(bender_FullHP_left)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(bender_FullHP_middle, sizeof(bender_FullHP_middle)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(bender_FullHP_right, sizeof(bender_FullHP_right)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
+      }
+      else
+      {
+        render(bender_FullHP_middle, sizeof(bender_FullHP_middle)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
+      }
+    }
+    // DG Health 61
+    else if(eeprom[4] == 0x3D)
+    {
+      if(face_dir == 0)
+      {
+        render(duke_FullHP_left, sizeof(duke_FullHP_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 1)
+      {
+        render(duke_FullHP_middle, sizeof(duke_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(face_dir == 2)
+      {
+        render(duke_FullHP_right, sizeof(duke_FullHP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(eeprom[3] == 0)
+      {
+        render(duke_FullHP_cigar, sizeof(duke_FullHP_cigar)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else
+      {
+        render(duke_FullHP_middle, sizeof(duke_FullHP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+    }
+    else if(eeprom[4] >= 0x50)
     {
       if(face_dir == 0)
       {
@@ -651,6 +798,10 @@ void run_sao_mode_0(uint8_t face_dir)
       else if(face_dir == 2)
       {
         render(dg_FullHP_right, sizeof(dg_FullHP_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+      }
+      else if(eeprom[3] == 0)
+      {
+        render(dg_bald, sizeof(dg_bald)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
       else
       {
@@ -714,7 +865,7 @@ void run_sao_mode_0(uint8_t face_dir)
       }
       else
       {
-        render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
+        render(dg_40HP_middle, sizeof(dg_40HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
     // DG Health 1 or higher     
@@ -734,7 +885,7 @@ void run_sao_mode_0(uint8_t face_dir)
       }
       else
       {
-        render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);       
+        render(dg_20HP_middle, sizeof(dg_20HP_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
     // DG DEAD. HEALTH = 0
@@ -823,7 +974,7 @@ void run_sao_mode_0(uint8_t face_dir)
       }
       else
       {
-        render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x); 
+        render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
     // DG Health 1 or higher     
@@ -883,6 +1034,8 @@ void render(const uint16_t pixel_array[], int16_t siz, int16_t offset_x, int16_t
 
 void write_to_eeprom(uint8_t address, uint8_t value)
 {
+  long current_write_time = millis();
+ 
   if((sao_mode == 1)||(sao_mode == 2)){
     SerialUSB.print("Write ");
     SerialUSB.print(value,HEX);
@@ -893,30 +1046,64 @@ void write_to_eeprom(uint8_t address, uint8_t value)
   // Make sure address is not in the protected area!
   if(address >= 0x02)
   {
-    //Writes to flash only persist if enabled AND it's different
-    if(m6_persistance){
-      if((address == 3) && (value != eeprom[address])){
-        data.eeprom_3 = value;  
-        persist_eeprom();
-        SerialUSB.println("Persistance Enabled - Saving Update to Flash...");
-      } 
-      else if((address == 3) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");}
-      
-      else if((address == 4) && (value != eeprom[address])){
-        data.eeprom_4 = value;
-        persist_eeprom();  
-        SerialUSB.println("Persistance Enabled - Saving Update to Flash...");
+    // Writes to flash only persist if enabled AND it's different
+    if(m6_persistence)
+    {
+      if((current_write_time - 30000) > previous_write_time)
+      {
+        if((address == 3) && (value != eeprom[address]))
+        {
+          data.eeprom_3 = value;  
+          persist_eeprom();
+          SerialUSB.println("Persistence Enabled - Saving Update to Flash...");
+        } 
+        else if((address == 3) && (value == eeprom[address]))
+        {
+          SerialUSB.println("Persistence Enabled - Not Updating Flash - Value Hasn't Changed!");
+        }
+        
+        else if((address == 4) && (value != eeprom[address]))
+        {
+          data.eeprom_4 = value;
+          persist_eeprom();  
+          SerialUSB.println("Persistence Enabled - Saving Update to Flash...");
+        }
+        else if((address == 4) && (value == eeprom[address]))
+        {
+          SerialUSB.println("Persistence Enabled - Not Updating Flash - Value Hasn't Changed!");
+        } 
+           
+        else if((address == 5) && (value != eeprom[address]))
+        {
+          data.eeprom_5 = value;
+          persist_eeprom();  
+          SerialUSB.println("Persistence Enabled - Saving Update to Flash...");
+        }
+        else if((address == 5) && (value == eeprom[address]))
+        {
+          SerialUSB.println("Persistence Enabled - Not Updating Flash - Value Hasn't Changed!");
+        }
+        // Update our write time
+        previous_write_time = current_write_time;  
+      }    
+      else
+      {
+        SerialUSB.println("Persistence Enabled - Not Updating Flash - Timeout not Reached");
+        SerialUSB.print("It has only been ");
+        SerialUSB.print(current_write_time - previous_write_time);
+        SerialUSB.println("ms since last write.");
       }
-      else if((address == 4) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");} 
-         
-      else if((address == 5) && (value != eeprom[address])){
-        data.eeprom_5 = value;
-        persist_eeprom();  
-        SerialUSB.println("Persistance - Saving Update to Flash...");
-      }
-      else if((address == 5) && (value == eeprom[address])){SerialUSB.println("Persistance Enabled - Not Updating Flash - Value Hasn't Changed!");}      
     }
     eeprom[address] = value;
+
+    if(address == 0x22 && value == 0x01)
+    {
+      m1_inconspicuous_variable = 1;
+    }
+    else if(address == 0x22 && value == 0x00)
+    {
+      m1_inconspicuous_variable = 0;
+    }
   }
   else
   {
