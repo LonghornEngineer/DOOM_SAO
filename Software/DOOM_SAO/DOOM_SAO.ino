@@ -1105,7 +1105,7 @@ void write_to_eeprom(uint8_t address, uint8_t value)
     {
       m1_lowkey_variable = 1;
     }
-    else
+    else if(address == 0x13 && value == 0x00)
     {
       m1_lowkey_variable = 0;
     }
