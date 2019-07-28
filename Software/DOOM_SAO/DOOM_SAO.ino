@@ -91,6 +91,7 @@ typedef struct
   // This by default will be false and set the first time the SAO is powered up
   bool init;        
   bool m6_persistence; 
+  bool m7_airplane;
   // We don't store eeprom 0..2 because they are protected anyway
   uint8_t eeprom_3; 
   uint8_t eeprom_4;
@@ -113,6 +114,7 @@ bool menu_display_4 = true;
 bool menu_display_4_1 = true;
 bool menu_display_5 = true;
 bool menu_display_6 = true;
+bool menu_display_7 = true;
 
 bool sao_god_mode_display = false;
 uint8_t sao_mode = 0;
@@ -133,6 +135,8 @@ uint8_t m4_hw_incoming_byte = 0;
 
 bool m6_persistence = false;
 bool m6_persistence_init_test = false;
+
+bool m7_airplane = false;
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 
@@ -312,6 +316,7 @@ void mode_2_dg_sniffer()
   if(menu_display_2)
   {
     SerialUSB.println("**DOOM Guy Bus Sniffer Mode**");
+    if(m7_airplane) SerialUSB.println("Currently in Airplane Mode - You Won't See Anything!");
     SerialUSB.println("Press Q to quit back to the main menu.\n");  
     // this prevents infinite printing of the menu in loop 
     menu_display_2 = false;   
@@ -541,6 +546,64 @@ void mode_6_persistence()
   }
 }
 
+void mode_7_airplane()
+{
+  if(menu_display_7)
+  {
+    SerialUSB.println("**Airplane Mode**");
+    SerialUSB.println("This allows you to completely ignore logical I2C communication from the badge.");
+    SerialUSB.println("In some cases, such as with DaBomb Badge, a peripheral (LED Driver) may share the same address 0x50.");
+    SerialUSB.println("We realize Airplane Mode refers to wireless comms and is a stupid way to refer to this mode.");
+    SerialUSB.println("But you all know what it means...");
+    SerialUSB.println("If you plan to use this SAO with a badge that uses the same address we reccomend:");
+    SerialUSB.println("Enable Persistence -> Enable Airplane Mode -> Disable Persistence\n");
+    if(m7_airplane) SerialUSB.println("Airplane Mode is currently: ENABLED\n");
+    else SerialUSB.println("Airplane Mode is currently: DISABLED\n");;
+
+    SerialUSB.println("Press Q : Quit Back to the Main Menu");  
+    SerialUSB.println("Press 1 : DISABLE Airplane Mode (default)"); 
+    SerialUSB.println("Press 2 : ENABLE Airplane Mode"); 
+    SerialUSB.print("Please enter a selection: "); 
+    menu_display_7 = false; //this prevents infinite printing of the menu in loop   
+  }
+
+  // Press (Q or q) to quit back to main menu
+  incomingByte = SerialUSB.read();
+  if((incomingByte == 'q') || (incomingByte == 'Q'))
+  {
+    sao_mode = 0;
+    menu_display_0 = true;
+    menu_display_7 = true;
+  }
+
+  // m7_airplane mode Selection
+  if((incomingByte == '1') || (incomingByte == '2')){
+    if(incomingByte == '1'){//Disable Persisance
+      if(m7_airplane)
+      {
+        // Only change it if it's different, so here its currently TRUE and they want it FALSE
+        data.m7_airplane = false;
+        persist_eeprom();
+        m7_airplane = false;
+      }
+    }
+    else
+    {
+      // Enable m7_airplane
+      // Only change it if it's different, so here its currently FALSE and they want it TRUE
+      if(!m7_airplane){
+        data.m7_airplane = true;
+        persist_eeprom();
+        m7_airplane = true;
+      }
+    }
+    // echo user selection to the USB terminal
+    SerialUSB.print((char)incomingByte); 
+    SerialUSB.println(" \n");
+    menu_display_7 = true;
+  }
+}
+
 void menu()
 {
   // The purpose of the menu function is to externally call the sub-menu displays
@@ -565,7 +628,8 @@ void menu()
         SerialUSB.println("4 - Serial UART  Sniffer Mode");
         SerialUSB.println("5 - Custom  Application  Mode");
         SerialUSB.println("6 - EEPROM  Persistence  Mode");
-        SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5, 6: ");  
+        SerialUSB.println("7 - Badge SAO  Airplane  Mode");
+        SerialUSB.print("Please Select a Mode 1, 2, 3, 4, 5, 6, 7: ");  
         // this prevents infinite printing of the menu in loop   
         menu_display_0 = false;
       }
@@ -583,7 +647,7 @@ void menu()
       }
 
       // If valid input 1..5 put the SAO in to that mode
-      if((incomingByte >= '1') && (incomingByte <= '6') && (menu_display_start == false))
+      if((incomingByte >= '1') && (incomingByte <= '7') && (menu_display_start == false))
       {
         // echo user selection to the USB terminal
         SerialUSB.print((char)incomingByte); 
@@ -623,6 +687,9 @@ void menu()
 
     // Mode 6 - EEPROM Persistence Mode
     case 6: mode_6_persistence(); break;
+
+    // Mode 7 - Airplane Mode
+    case 7: mode_7_airplane(); break;
   }
 }
 
@@ -658,8 +725,10 @@ void setup(void)
     data.eeprom_4 = eeprom[4];
     data.eeprom_5 = eeprom[5];
     data.m6_persistence = false;
+    data.m7_airplane = false;
     data.init = true;
     m6_persistence_init_test = true;
+    m7_airplane = false;
     persist_eeprom();
     // This will only display one time, post flash
     SerialUSB.println("Saving first time initialization data to flash");
@@ -671,6 +740,7 @@ void setup(void)
     eeprom[4] = data.eeprom_4;
     eeprom[5] = data.eeprom_5;
     m6_persistence = data.m6_persistence;
+    m7_airplane = data.m7_airplane;
   }
 }
 
@@ -1112,48 +1182,52 @@ void write_to_eeprom(uint8_t address, uint8_t value)
       SerialUSB.println(address);
     }
   }
-  return;
+
+return;
 }
 
 void receiveEvent(int howMany)
 {
-  if(sao_mode == 2){
-    SerialUSB.print("receiveEvent bytes received: ");
-    SerialUSB.println(howMany);
-  }
-
-  // 1 Byte Received. This is a Read From EEPROM Operation from a double i2c stop!
-  if(howMany == 1)
-  {
-    uint8_t x = Wire.read();                 // receive byte
-    mem_write_address = x;
-    mem_write_address_valid = 1;
-  }
-  // 2 Bytes Received. This is a Write to EEPROM Operation
-  else if(howMany == 2)
-  {
-    uint8_t eeprom_address = Wire.read();    // receive byte
-    uint8_t value = Wire.read();             // receive byte
-    write_to_eeprom(eeprom_address, value);
-  }
-  // No more Bytes. Skip it!
-  else if(howMany == 0)
-  {
+  if(!m7_airplane){
     if(sao_mode == 2){
-      SerialUSB.println("No more bytes. Skip!");
+      SerialUSB.print("receiveEvent bytes received: ");
+      SerialUSB.println(howMany);
     }
-  }
-  // DOOM SAO does not support multi byte reads and writes
-  else
-  {
-    if(sao_mode == 2){
-      SerialUSB.println("To many bytes! Not Supported!");
+  
+    // 1 Byte Received. This is a Read From EEPROM Operation from a double i2c stop!
+    if(howMany == 1)
+    {
+      uint8_t x = Wire.read();                 // receive byte
+      mem_write_address = x;
+      mem_write_address_valid = 1;
+    }
+    // 2 Bytes Received. This is a Write to EEPROM Operation
+    else if(howMany == 2)
+    {
+      uint8_t eeprom_address = Wire.read();    // receive byte
+      uint8_t value = Wire.read();             // receive byte
+      write_to_eeprom(eeprom_address, value);
+    }
+    // No more Bytes. Skip it!
+    else if(howMany == 0)
+    {
+      if(sao_mode == 2){
+        SerialUSB.println("No more bytes. Skip!");
+      }
+    }
+    // DOOM SAO does not support multi byte reads and writes
+    else
+    {
+      if(sao_mode == 2){
+        SerialUSB.println("To many bytes! Not Supported!");
+      }
     }
   }
 }
 
 void requestEvent()
 {   
+  if(!m7_airplane){
     // If requestEvent gets called before receiveEvent then we have a Read From EEPROM Operation from a single i2c stop!
     // This means we need to read from the i2c buffer the address!
     if(mem_write_address_valid == 0)
@@ -1183,6 +1257,7 @@ void requestEvent()
       Wire.write(0x00);
     }
     return;
+  }
 }
 
 void printHexByte(int b)

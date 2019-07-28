@@ -52,6 +52,9 @@ This is the area for YOU to add your own code.
 6 - EEPROM Persistance Mode
 This allows you to save changes made to the EEPROM, which by default reset on power cycle.
 
+6 - BADGE SAO Airplane Mode
+This allows you to ignore all logical control of the host badge. In minor cases, a badge may have a component which uses the same address (0x50) as our SAO, which will result in unexpected behavior. This is known to be the case with Team Ides DaBomb! Badge. In this case, enable persistance, enable airplane mode, then disable persistance so the SAO can still operate in a standalone mode. Not doing so will require reflashing of the SAO with the Arduino IDE.
+
 ## Interfacing with the DOOM SAO via I2C
 
 The DOOM SAO implements the [V1.69bis standard](https://hackaday.com/2019/03/20/introducing-the-shitty-add-on-v1-69bis-standard/) for SAO devices and follows the [AND!XOR SAO Reference Design](https://github.com/ANDnXOR/sao-reference-designs). What this means is that using the I2C interface and GPIO pins of the V1.69bis standard users will be able to control how DOOM Guy acts and behaves.
