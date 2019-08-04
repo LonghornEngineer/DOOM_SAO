@@ -125,6 +125,7 @@ uint8_t m1_interface_value = 0;
 int m1_char_count = 0;
 int m1_inChar = 0;
 int m1_inconspicuous_variable = 0;
+int m1_lowkey_variable = 0;
 bool m1_interface_addr_selection = false;
 bool m1_interface_value_selection = false;
 String m1_inString = ""; 
@@ -831,6 +832,10 @@ void run_sao_mode_0(uint8_t face_dir)
         render(bender_FullHP_middle, sizeof(bender_FullHP_middle)/2, mf_offset_x, mf_offset_y, mf_pixel_size, mf_rez_x);
       }
     }
+    else if(m1_lowkey_variable == 1)
+    {
+      render(dg_dealwithit, sizeof(dg_dealwithit)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+    }
     // DG Health 61
     else if(eeprom[4] == 0x3D)
     {
@@ -1166,6 +1171,15 @@ void write_to_eeprom(uint8_t address, uint8_t value)
     }
     eeprom[address] = value;
 
+    if(address == 0x13 && value == 0x37)
+    {
+      m1_lowkey_variable = 1;
+    }
+    else if(address == 0x13 && value == 0x00)
+    {
+      m1_lowkey_variable = 0;
+    }
+    
     if(address == 0x22 && value == 0x01)
     {
       m1_inconspicuous_variable = 1;
