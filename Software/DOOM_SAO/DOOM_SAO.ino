@@ -705,6 +705,8 @@ void setup(void)
 
   pinMode(GPIO1, INPUT);
   pinMode(GPIO2, INPUT);
+  digitalWrite(GPIO1, LOW);
+  digitalWrite(GPIO2, LOW);
   
   // Init ST7789 240x240
   tft.init(240, 240);             
