@@ -972,8 +972,8 @@ void run_sao_mode_0(uint8_t face_dir)
   // DG ANGRY!
   else
   {
-    // DG Health 80 or higher
-    if(eeprom[4] >= 0x50)
+    // DG Anger 80 or higher
+    if(eeprom[5] >= 0x50)
     {
       if(face_dir == 0)
       {
@@ -992,28 +992,28 @@ void run_sao_mode_0(uint8_t face_dir)
         render(dg_FullHP_angry_middle, sizeof(dg_FullHP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
-    // DG Health 60 or higher
-    else if(eeprom[4] >= 0x3C)
-    {
-      if(face_dir == 0)
-      {
-        render(dg_80HP_angry_left, sizeof(dg_80HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else if(face_dir == 1)
-      {
-        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else if(face_dir == 2)
-      {
-        render(dg_80HP_angry_right, sizeof(dg_80HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else
-      {
-        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-    }
-    // DG Health 40 or higher
-    else if(eeprom[4] >= 0x28)
+//    // DG Anger 60 or higher
+//    else if(eeprom[5] >= 0x3C)
+//    {
+//      if(face_dir == 0)
+//      {
+//        render(dg_80HP_angry_left, sizeof(dg_80HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else if(face_dir == 1)
+//      {
+//        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else if(face_dir == 2)
+//      {
+//        render(dg_80HP_angry_right, sizeof(dg_80HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else
+//      {
+//        render(dg_80HP_angry_middle, sizeof(dg_80HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//    }
+    // DG Anger 40 or higher
+    else if(eeprom[5] >= 0x28)
     {        
       if(face_dir == 0)
       {  
@@ -1032,8 +1032,8 @@ void run_sao_mode_0(uint8_t face_dir)
         render(dg_60HP_angry_middle, sizeof(dg_60HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
-    // DG Health 20 or higher
-    else if(eeprom[4] >= 0x14)
+    // DG Anger 20 or higher
+    else if(eeprom[5] >= 0x14)
     {
       if(face_dir == 0)
       {
@@ -1052,31 +1052,26 @@ void run_sao_mode_0(uint8_t face_dir)
         render(dg_40HP_angry_middle, sizeof(dg_40HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
       }
     }
-    // DG Health 1 or higher     
-    else if(eeprom[4] > 0x00)
-    {
-      if(face_dir == 0)
-      {
-        render(dg_20HP_angry_left, sizeof(dg_20HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else if(face_dir == 1)
-      {
-        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else if(face_dir == 2)
-      {
-        render(dg_20HP_angry_right, sizeof(dg_20HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-      else
-      {
-        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
-      }
-    }
-    // DG DEAD. HEALTH = 0
-    else
-    {
-      render(dg_dead, sizeof(dg_dead)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);           
-    }        
+//    // DG Anger 1 or higher     
+//    else if(eeprom[5] > 0x00)
+//    {
+//      if(face_dir == 0)
+//      {
+//        render(dg_20HP_angry_left, sizeof(dg_20HP_angry_left)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else if(face_dir == 1)
+//      {
+//        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else if(face_dir == 2)
+//      {
+//        render(dg_20HP_angry_right, sizeof(dg_20HP_angry_right)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//      else
+//      {
+//        render(dg_20HP_angry_middle, sizeof(dg_20HP_angry_middle)/2, dg_offset_x, dg_offset_y, dg_pixel_size, dg_rez_x);
+//      }
+//    }    
   }
   return;
 }
